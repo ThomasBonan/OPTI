@@ -19,7 +19,8 @@
   /* Vue configurateur */
   import ConfigurateurActions from './components/ConfigurateurActions.svelte';
   import Summary from './components/Summary.svelte';
-  import ExportBar from './components/ExportBar.svelte'; // ✅ export SVG/PNG/PDF
+  import ExportBar from './components/ExportBar.svelte'; // export SVG/PNG/PDF
+  import GroupSelectorBar from './components/GroupSelectorBar.svelte';
 
   /* Vue éditeur (lazy-load) */
   let EditorLayoutComponent = null;
@@ -71,7 +72,10 @@
     <div class="mainpane">
       <!-- Outils de ligne (EXPORT GRAPHE) -->
       <div class="rowtools">
-        <ExportBar />
+        <GroupSelectorBar />
+        <div class="rowtools-export">
+          <ExportBar />
+        </div>
       </div>
 
       <div class="mainrow">
@@ -110,9 +114,22 @@
   /* ====== Mise en page configurateur avec Résumé à droite ====== */
   .mainpane { display: flex; flex-direction: column; min-height: 0; }
   .rowtools {
-    display: flex; align-items: center; gap: 8px;
-    justify-content: flex-end;
+    display: flex;
+    align-items: stretch;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: space-between;
     padding: 8px 12px 0;
+  }
+  .rowtools-export {
+    flex: 1 1 360px;
+    min-width: 280px;
+    display: flex;
+    justify-content: flex-end;
+  }
+  .rowtools-export :global(.exportbar) {
+    flex: 0 0 auto;
+    width: auto;
   }
   .rowtools .label { color: var(--c-text-muted, #8b93a7); margin-right: 4px; }
 
@@ -149,7 +166,9 @@
   @media (max-width: 900px) {
     .rowtools {
       justify-content: center;
-      flex-wrap: wrap;
+    }
+    .rowtools-export {
+      justify-content: flex-start;
     }
     .mainrow {
       padding: 8px 8px 12px;

@@ -99,11 +99,47 @@ export const draftAvailable = writable(false);
 export const undoAvailable = writable(false);
 export const redoAvailable = writable(false);
 export const searchFilters = writable({ group: 'all', gammes: [] });
+
+function ensureConfiguratorGroupFilter() {
+  if (get(mode) !== 'configurateur') {
+    return;
+  }
+  const groupedData = get(grouped) || {};
+  const groups = Object.keys(groupedData)
+    .sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
+  searchFilters.update((current) => {
+    if (groups.length === 0) {
+      if (current.group === 'all') return current;
+      return { ...current, group: 'all' };
+    }
+    const currentIsValid =
+      current.group && current.group !== 'all' && groups.includes(current.group);
+    const nextGroup = currentIsValid ? current.group : groups[0];
+    if (nextGroup === current.group) return current;
+    return { ...current, group: nextGroup };
+  });
+}
+
+mode.subscribe((value) => {
+  if (value === 'editor') {
+    searchFilters.update((current) => {
+      if (current.group === 'all') return current;
+      return { ...current, group: 'all' };
+    });
+    return;
+  }
+  if (value === 'configurateur') {
+    ensureConfiguratorGroupFilter();
+  }
+});
+
+grouped.subscribe(() => {
+  ensureConfiguratorGroupFilter();
+});
 export const archivedSchemas = writable([]);
 export const auditSummaries = writable([]);
 export const auditPanelOpen = writable(false);
 export const auditSelectedSchemaId = writable(null);
-export const storedSelections = writable([]);
 export const systemHealth = writable(null);
 export const systemHealthPanelOpen = writable(false);
 export const systemHealthLoading = writable(false);
@@ -693,16 +729,6 @@ export function downloadJSON(filename = 'configurateur.json', payloadOverride = 
   URL.revokeObjectURL(url);
 }
 
-function downloadText(filename, content) {
-  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
 function sanitizeFilename(base, fallback = 'export') {
   const normalized = typeof base === 'string' && base.length ? base : fallback;
   const safe = normalized
@@ -1053,107 +1079,6 @@ export async function fetchSchemaAudit(id) {
     }
     throw err;
   }
-}
-
-function buildSelectionHierarchy(selectionIds, groupedData, labels) {
-  const selectionSet = new Set(selectionIds);
-  const consumed = new Set();
-  const groups = [];
-
-  for (const [groupName, info] of Object.entries(groupedData || {})) {
-    const items = [];
-    const root = Array.isArray(info?.root) ? info.root : [];
-    const rootSelected = root.filter((id) => selectionSet.has(id));
-    if (rootSelected.length) {
-      rootSelected.forEach((id) => consumed.add(id));
-      items.push({
-        name: null,
-        nodes: rootSelected.map((id) => labels[id] || id)
-      });
-    }
-    for (const [subName, ids] of Object.entries(info?.subgroups || {})) {
-      const nodes = (ids || []).filter((id) => selectionSet.has(id));
-      if (nodes.length) {
-        nodes.forEach((id) => consumed.add(id));
-        items.push({
-          name: subName,
-          nodes: nodes.map((id) => labels[id] || id)
-        });
-      }
-    }
-    if (items.length) {
-      groups.push({ name: groupName, items });
-    }
-  }
-
-  const leftovers = Array.from(selectionSet).filter((id) => !consumed.has(id));
-  if (leftovers.length) {
-    groups.push({
-      name: 'Sans groupe',
-      items: [
-        {
-          name: null,
-          nodes: leftovers.map((id) => labels[id] || id)
-        }
-      ]
-    });
-  }
-  return groups;
-}
-
-export function storeCurrentSelectionSnapshot() {
-  const selection = get(selected);
-  if (!selection || selection.size === 0) {
-    throw new Error('Aucune option selectionnee.');
-  }
-  const schema = get(activeSchema);
-  const schemaName = schema?.name || 'Schema sans nom';
-  const groupedData = get(grouped) || {};
-  const labels = get(optionLabels) || {};
-  const selectionIds = Array.from(selection);
-  const groups = buildSelectionHierarchy(selectionIds, groupedData, labels);
-  if (!groups.length) {
-    throw new Error('Impossible de determiner la structure des selections.');
-  }
-  const entry = {
-    schemaId: schema?.id ?? null,
-    schemaName,
-    timestamp: new Date().toISOString(),
-    groups
-  };
-  storedSelections.update((list) => [...list, entry]);
-}
-
-export function clearStoredSelections() {
-  storedSelections.set([]);
-}
-
-export function exportStoredSelectionsTxt(filename = null) {
-  const selections = get(storedSelections);
-  if (!selections.length) {
-    throw new Error('Aucune selection stockee.');
-  }
-  const lines = [];
-  selections.forEach((entry, index) => {
-    lines.push(`# ${entry.schemaName || 'Schema sans nom'}`);
-    (entry.groups || []).forEach((group) => {
-      lines.push(`## ${group.name || 'Sans groupe'}`);
-      (group.items || []).forEach((item) => {
-        lines.push(item.name ? `### ${item.name}` : '### Sans sous-groupe');
-        (item.nodes || []).forEach((label) => {
-          lines.push(`- ${label}`);
-        });
-        lines.push('');
-      });
-    });
-    if (index !== selections.length - 1) {
-      lines.push('');
-    }
-  });
-  const content = lines.join('\n').trimEnd();
-  const baseName = filename && filename.trim().length ? filename.trim() : 'selections';
-  const finalName = `${sanitizeFilename(baseName, 'selections')}.txt`;
-  downloadText(finalName, content);
 }
 
 export function openAuditPanel(schemaId = null) {

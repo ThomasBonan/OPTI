@@ -48,11 +48,7 @@ import {
     openAuditPanel,
     openSystemHealthPanel,
     refreshSystemHealth,
-    systemHealthLoading,
-    storedSelections,
-    storeCurrentSelectionSnapshot,
-    clearStoredSelections,
-    exportStoredSelectionsTxt
+    systemHealthLoading
   } from '../lib/stores.js';
   import { toastSuccess, toastError, toastInfo } from '../lib/toasts.js';
   import { readmeLinks } from '../lib/readme-content.js';
@@ -178,29 +174,6 @@ import {
     }
   }
 
-  function handleStoreSelection() {
-    try {
-      storeCurrentSelectionSnapshot();
-      toastSuccess('Selection stockee.');
-    } catch (err) {
-      toastError(err?.message || 'Impossible de stocker la selection.');
-    }
-  }
-
-  function handleExportStoredSelections() {
-    try {
-      exportStoredSelectionsTxt();
-      toastSuccess('Export texte genere.');
-    } catch (err) {
-      toastError(err?.message || "Impossible d'exporter le stockage.");
-    }
-  }
-
-  function handleClearStoredSelections() {
-    clearStoredSelections();
-    toastInfo('Stockage temporaire vide.');
-  }
-
   async function handleImport(event) {
     const file = event.currentTarget.files?.[0];
     event.currentTarget.value = '';
@@ -249,23 +222,6 @@ import {
     pendingSchemaAction = null;
     pendingSchemaTarget = '';
     selected.set(new Set());
-    action?.();
-  }
-
-  function handleStoreSelectionAndProceed() {
-    if (!pendingSchemaAction) return;
-    try {
-      storeCurrentSelectionSnapshot();
-      toastSuccess('Selection stockee.');
-    } catch (err) {
-      toastError(err?.message || 'Impossible de stocker la selection.');
-      return;
-    }
-    selected.set(new Set());
-    showUnsavedSelectionWarning = false;
-    const action = pendingSchemaAction;
-    pendingSchemaAction = null;
-    pendingSchemaTarget = '';
     action?.();
   }
 
@@ -597,8 +553,6 @@ import {
   }
 
   const gammeOptions = ['Smart', 'Mod', 'Evo'];
-  $: selectionCount = currentSelectionSize;
-  $: storedSelectionsCount = Array.isArray($storedSelections) ? $storedSelections.length : 0;
 
   $: groupOptions = Object.keys($grouped || {}).sort((a, b) =>
     a.localeCompare(b, 'fr', { sensitivity: 'base' })
@@ -813,7 +767,12 @@ import {
               value={$searchFilters.group}
               on:change={handleGroupFilter}
             >
-              <option value="all">Tous les groupes</option>
+              <option
+                value="all"
+                disabled={$mode === 'configurateur'}
+              >
+                {$mode === 'configurateur' ? 'Tous les groupes (editeur uniquement)' : 'Tous les groupes'}
+              </option>
               {#each groupOptions as group}
                 <option value={group}>{group}</option>
               {/each}
@@ -835,6 +794,11 @@ import {
               Reinitialiser
             </button>
           </div>
+          {#if $mode === 'configurateur'}
+            <p class="filter-note">
+              La vue configurateur n'affiche qu'un seul groupe. Utilisez la barre d'actions pour changer de groupe visible.
+            </p>
+          {/if}
         </div>
 
         <div class="actions-wrap">
@@ -855,17 +819,6 @@ import {
               <button class="btn btn-sm" type="button" on:click={toggleTheme} aria-label="Theme">
                 Theme: {$theme === 'dark' ? 'clair' : 'sombre'}
               </button>
-              {#if $mode === 'configurateur'}
-              <button class="btn btn-sm" type="button" on:click={handleStoreSelection} disabled={selectionCount === 0}>
-                Stocker la selection
-              </button>
-                <button class="btn btn-sm" type="button" on:click={handleExportStoredSelections} disabled={!storedSelectionsCount}>
-                  Exporter stockage ({storedSelectionsCount})
-                </button>
-                <button class="btn btn-sm" type="button" on:click={handleClearStoredSelections} disabled={!storedSelectionsCount}>
-                  Vider stockage
-                </button>
-              {/if}
           </div>
         </div>
 
@@ -1004,21 +957,21 @@ import {
 {#if showUnsavedSelectionWarning}
   <div class="confirm-backdrop" role="alertdialog" aria-modal="true" aria-live="assertive">
     <div class="confirm-panel">
-      <h3>Selection non stockee</h3>
+      <h3>Selection en cours</h3>
       <p>
-        Vous avez des options selectionnees qui ne sont pas stockees.
+        Vous avez des options selectionnees qui seront perdues.
         {#if pendingSchemaTarget}
-          Voulez-vous les conserver avant de charger "{pendingSchemaTarget}" ?
+          Confirmez-vous le chargement de "{pendingSchemaTarget}" ?
         {:else}
-          Voulez-vous les conserver avant de changer de schema ?
+          Confirmez-vous le changement de schema ?
         {/if}
       </p>
       <div class="confirm-actions">
-        <button class="btn btn-sm primary" type="button" on:click={handleStoreSelectionAndProceed}>
-          Stocker la selection
+        <button class="btn btn-sm primary" type="button" on:click={confirmSchemaChangeWarning}>
+          Continuer
         </button>
-        <button class="btn btn-sm danger" type="button" on:click={confirmSchemaChangeWarning}>
-          Passer au schema
+        <button class="btn btn-sm" type="button" on:click={cancelSchemaChangeWarning}>
+          Annuler
         </button>
       </div>
     </div>
@@ -1397,6 +1350,11 @@ import {
     align-items:center;
     gap:4px;
     font-size:12px;
+    color: var(--c-text-muted, #64748b);
+  }
+  .filter-note {
+    margin: 4px 0 0;
+    font-size: 12px;
     color: var(--c-text-muted, #64748b);
   }
 
