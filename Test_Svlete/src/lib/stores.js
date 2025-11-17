@@ -78,6 +78,138 @@ export const collapsed = writable({});      // { [group]: { __group?:bool, [sg|_
  * ======================================= */
 export const data = writable({});
 export const grouped = writable({});
+export const groupCatalog = writable([]);
+
+const lazyGroupCache = new Map();
+const lazyLoadedGroups = new Set();
+let lazyWarmQueue = [];
+let lazyWarmHandle = null;
+let lazyModeActive = false;
+
+function clearLazyGroupsCache() {
+  lazyGroupCache.clear();
+  lazyLoadedGroups.clear();
+  lazyWarmQueue = [];
+  if (lazyWarmHandle) {
+    clearTimeout(lazyWarmHandle);
+    lazyWarmHandle = null;
+  }
+}
+
+function computeGroupSize(entry = {}) {
+  const rootCount = Array.isArray(entry?.root) ? entry.root.length : 0;
+  const subgroupCount = Object.values(entry?.subgroups || {}).reduce(
+    (total, ids) => total + ((ids && ids.length) || 0),
+    0
+  );
+  return rootCount + subgroupCount;
+}
+
+function updateCatalogFromGroupedValue(value) {
+  const list = Object.entries(value || {}).map(([name, spec]) => ({
+    name,
+    ready: true,
+    size: computeGroupSize(spec)
+  }));
+  groupCatalog.set(list);
+}
+
+grouped.subscribe((value) => {
+  if (!lazyModeActive) {
+    updateCatalogFromGroupedValue(value);
+  }
+});
+
+function applyGroupedHierarchy(hier) {
+  const entries = Object.entries(hier || {}).sort((a, b) =>
+    a[0].localeCompare(b[0], 'fr', { sensitivity: 'base' })
+  );
+  clearLazyGroupsCache();
+  if (entries.length === 0) {
+    lazyModeActive = false;
+    grouped.set({});
+    groupCatalog.set([]);
+    return;
+  }
+  if (get(mode) === 'editor') {
+    lazyModeActive = false;
+    const ordered = Object.fromEntries(entries);
+    grouped.set(ordered);
+    updateCatalogFromGroupedValue(ordered);
+    return;
+  }
+  lazyModeActive = true;
+  entries.forEach(([name, spec]) => {
+    lazyGroupCache.set(name, structuredClone(spec));
+  });
+  groupCatalog.set(
+    entries.map(([name, spec]) => ({
+      name,
+      ready: false,
+      size: computeGroupSize(spec)
+    }))
+  );
+  grouped.set({});
+  lazyWarmQueue = entries.map(([name]) => name);
+}
+
+function ensureLazyGroupLoaded(name, { skipWarmStart = false } = {}) {
+  if (!lazyModeActive) return;
+  if (!name || name === 'all') return;
+  if (lazyLoadedGroups.has(name)) return;
+  const payload = lazyGroupCache.get(name);
+  if (!payload) return;
+  grouped.update((cur) => {
+    if (cur[name]) return cur;
+    return { ...cur, [name]: structuredClone(payload) };
+  });
+  lazyLoadedGroups.add(name);
+  groupCatalog.update((list) =>
+    list.map((meta) => (meta.name === name ? { ...meta, ready: true } : meta))
+  );
+  lazyWarmQueue = lazyWarmQueue.filter((entry) => entry !== name);
+  finalizeLazyModeIfComplete();
+  if (!skipWarmStart) {
+    startWarmLoop();
+  }
+}
+
+function startWarmLoop() {
+  if (lazyWarmHandle || !lazyModeActive) return;
+  const loop = () => {
+    if (!lazyModeActive) {
+      lazyWarmHandle = null;
+      return;
+    }
+    const next = lazyWarmQueue.find((entry) => !lazyLoadedGroups.has(entry));
+    if (!next) {
+      lazyWarmHandle = null;
+      return;
+    }
+    lazyWarmQueue = lazyWarmQueue.filter((entry) => entry !== next);
+    ensureLazyGroupLoaded(next, { skipWarmStart: true });
+    lazyWarmHandle = setTimeout(loop, 80);
+  };
+  lazyWarmHandle = setTimeout(loop, 140);
+}
+
+function finalizeLazyModeIfComplete() {
+  if (!lazyModeActive) return;
+  if (lazyGroupCache.size === 0) return;
+  if (lazyLoadedGroups.size >= lazyGroupCache.size) {
+    lazyModeActive = false;
+    clearLazyGroupsCache();
+    updateCatalogFromGroupedValue(get(grouped));
+  }
+}
+
+function hydrateAllLazyGroups() {
+  if (!lazyModeActive) return;
+  Array.from(lazyGroupCache.keys()).forEach((name) =>
+    ensureLazyGroupLoaded(name, { skipWarmStart: true })
+  );
+  finalizeLazyModeIfComplete();
+}
 export const gammes = writable({
   Smart: {},
   Mod:   {},
@@ -104,9 +236,8 @@ function ensureConfiguratorGroupFilter() {
   if (get(mode) !== 'configurateur') {
     return;
   }
-  const groupedData = get(grouped) || {};
-  const groups = Object.keys(groupedData)
-    .sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
+  const catalog = get(groupCatalog) || [];
+  const groups = catalog.map((meta) => meta.name);
   searchFilters.update((current) => {
     if (groups.length === 0) {
       if (current.group === 'all') return current;
@@ -122,6 +253,7 @@ function ensureConfiguratorGroupFilter() {
 
 mode.subscribe((value) => {
   if (value === 'editor') {
+    hydrateAllLazyGroups();
     searchFilters.update((current) => {
       if (current.group === 'all') return current;
       return { ...current, group: 'all' };
@@ -133,8 +265,16 @@ mode.subscribe((value) => {
   }
 });
 
-grouped.subscribe(() => {
+groupCatalog.subscribe(() => {
   ensureConfiguratorGroupFilter();
+});
+
+let lastSelectedGroup = null;
+searchFilters.subscribe((value) => {
+  const groupName = value?.group || null;
+  if (groupName === lastSelectedGroup) return;
+  lastSelectedGroup = groupName;
+  ensureLazyGroupLoaded(groupName);
 });
 export const archivedSchemas = writable([]);
 export const auditSummaries = writable([]);
@@ -286,7 +426,7 @@ function hydrateFromPayload(obj = {}, { captureBaseline = true, schemaId = null 
       )
     );
 
-    grouped.set(hier);
+    applyGroupedHierarchy(hier);
     optionLabels.set(labels);
     gammes.set(g);
 
@@ -1206,6 +1346,9 @@ export function resetAll() {
 
   data.set({});
   grouped.set({});
+  groupCatalog.set([]);
+  clearLazyGroupsCache();
+  lazyModeActive = false;
   gammes.set({ Smart: {}, Mod: {}, Evo: {} });
   optionLabels.set({});
   rulesets.set({ default: { rules: {} } });

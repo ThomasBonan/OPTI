@@ -37,6 +37,7 @@ import {
     restoreDraft,
     searchFilters,
     grouped,
+    groupCatalog,
     selected,
     authUser,
     authStatus,
@@ -554,9 +555,9 @@ import {
 
   const gammeOptions = ['Smart', 'Mod', 'Evo'];
 
-  $: groupOptions = Object.keys($grouped || {}).sort((a, b) =>
-    a.localeCompare(b, 'fr', { sensitivity: 'base' })
-  );
+  $: groupOptions = ($groupCatalog || [])
+    .map((meta) => meta.name)
+    .sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
   $: filtersActive =
     $searchFilters.group !== 'all' || ($searchFilters.gammes || []).length > 0;
   $: statusVariant = $activeSchema?.archived

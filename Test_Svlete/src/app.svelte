@@ -17,7 +17,6 @@
   import SystemHealthPanel from './components/SystemHealthPanel.svelte';
 
   /* Vue configurateur */
-  import ConfigurateurActions from './components/ConfigurateurActions.svelte';
   import Summary from './components/Summary.svelte';
   import ExportBar from './components/ExportBar.svelte'; // export SVG/PNG/PDF
   import GroupSelectorBar from './components/GroupSelectorBar.svelte';
@@ -27,6 +26,47 @@
   let editorLoading = false;
 
   const pageTitle = 'Vue Éditeur';
+
+  const MIN_SUMMARY_WIDTH = 260;
+  const MAX_SUMMARY_WIDTH = 520;
+  let summaryWidth = 340;
+  let resizing = false;
+  let resizeStartX = 0;
+  let resizeStartWidth = summaryWidth;
+  let activePointerId = null;
+  let resizeHandleEl = null;
+
+  function clampWidth(value) {
+    return Math.max(MIN_SUMMARY_WIDTH, Math.min(MAX_SUMMARY_WIDTH, value));
+  }
+
+  function onResizePointerDown(event) {
+    event.preventDefault();
+    resizing = true;
+    resizeStartX = event.clientX;
+    resizeStartWidth = summaryWidth;
+    activePointerId = event.pointerId;
+    resizeHandleEl = event.currentTarget;
+    resizeHandleEl?.setPointerCapture?.(activePointerId);
+    window.addEventListener('pointermove', onResizePointerMove);
+    window.addEventListener('pointerup', onResizePointerUp);
+  }
+
+  function onResizePointerMove(event) {
+    if (!resizing) return;
+    const delta = event.clientX - resizeStartX;
+    summaryWidth = clampWidth(resizeStartWidth + delta);
+  }
+
+  function onResizePointerUp(event) {
+    if (event.pointerId !== activePointerId) return;
+    resizing = false;
+    resizeHandleEl?.releasePointerCapture?.(activePointerId);
+    resizeHandleEl = null;
+    activePointerId = null;
+    window.removeEventListener('pointermove', onResizePointerMove);
+    window.removeEventListener('pointerup', onResizePointerUp);
+  }
 
   // Applique le thème via data-theme sur <html>
   let unsubTheme;
@@ -66,9 +106,7 @@
   {/if}
 {:else}
   <!-- === VUE configurateur === -->
-  <div class="layout">
-    <ConfigurateurActions />
-
+  <div class="layout layout--single">
     <div class="mainpane">
       <!-- Outils de ligne (EXPORT GRAPHE) -->
       <div class="rowtools">
@@ -78,12 +116,20 @@
         </div>
       </div>
 
-      <div class="mainrow">
+      <div class="mainrow" style={`--summary-width: ${summaryWidth}px`}>
         <div class="graph-wrap">
           <GraphPane />
         </div>
-
-        <aside class="summary-pane">
+        <div
+          class="split-handle"
+          role="separator"
+          aria-label="Redimensionner le résumé"
+          aria-orientation="vertical"
+          tabindex="0"
+          on:pointerdown={onResizePointerDown}
+          on:pointerup={onResizePointerUp}
+        />
+        <aside class="summary-pane" style={`width: ${summaryWidth}px`}>
           <Summary />
         </aside>
       </div>
@@ -134,33 +180,76 @@
   .rowtools .label { color: var(--c-text-muted, #8b93a7); margin-right: 4px; }
 
   .mainrow {
-    display: grid;
-    grid-template-columns: 1fr 340px; /* graphe | résumé */
-    gap: 12px;
+    display: flex;
+    align-items: stretch;
+    gap: 0;
     padding: 8px 12px 12px;
-    flex: 1; min-height: 0;
+    flex: 1;
+    min-height: 0;
   }
   .graph-wrap {
-    min-width: 0; min-height: 0; display: flex;
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+    display: flex;
     background: var(--c-bg, var(--bg, #fff));
     border: 1px solid var(--c-stroke, var(--border-color, #dfe3ea));
+    border-right: none;
     border-radius: 8px;
+    overflow: hidden;
   }
   .graph-wrap :global(svg),
   .graph-wrap :global(canvas) { flex: 1; min-height: 0; }
 
+  .split-handle {
+    width: 10px;
+    cursor: col-resize;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(to right, transparent, rgba(148,163,184,.35), transparent);
+  }
+  .split-handle::after {
+    content: '';
+    width: 2px;
+    height: 40px;
+    border-radius: 999px;
+    background: var(--c-stroke, rgba(148,163,184,.8));
+  }
+
   .summary-pane {
-    min-width: 300px;
+    flex: 0 0 auto;
+    min-width: 260px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
     background: var(--c-box-bg, var(--panel-bg, #f7f8fa));
     border: 1px solid var(--c-stroke, var(--border-color, #dfe3ea));
-    border-radius: 8px;
+    border-radius: 0 8px 8px 0;
     overflow: auto;
     padding: 8px;
   }
 
   @media (max-width: 1200px) {
-    .mainrow { grid-template-columns: 1fr; }
-    .summary-pane { order: 2; max-height: 320px; }
+    .mainrow {
+      flex-direction: column;
+    }
+    .split-handle {
+      display: none;
+    }
+    .graph-wrap {
+      border-right: 1px solid var(--c-stroke, var(--border-color, #dfe3ea));
+      border-radius: 8px;
+      margin-top: 12px;
+    }
+    .summary-pane {
+      width: 100%;
+      min-width: 0;
+      border-radius: 8px;
+      margin-top: 12px;
+      order: 2;
+      max-height: none;
+    }
   }
 
   @media (max-width: 900px) {
@@ -171,11 +260,12 @@
       justify-content: flex-start;
     }
     .mainrow {
-      padding: 8px 8px 12px;
+      padding: 8px;
     }
     .summary-pane {
       min-width: 0;
       width: 100%;
+      margin-top: 12px;
     }
   }
 

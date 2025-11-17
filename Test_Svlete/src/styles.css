@@ -109,12 +109,22 @@ body {
   grid-template-columns: 340px 1fr;
   height: calc(100% - 52px);
 }
+.layout.layout--single {
+  display: flex;
+  flex-direction: column;
+  height: calc(100% - 52px);
+}
 .sidebar {
   border-right: 1px solid var(--c-stroke);
   overflow: auto;
   padding: 12px;
 }
 .mainpane { display: flex; flex-direction: column; }
+.layout.layout--single .mainpane {
+  flex: 1;
+  padding-left: 12px;
+  padding-right: 12px;
+}
 .toolbar {
   display:flex; align-items:center; justify-content:space-between;
   padding:8px 12px; border-bottom:1px solid var(--c-stroke);
