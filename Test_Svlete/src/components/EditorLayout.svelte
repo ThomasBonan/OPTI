@@ -3,6 +3,7 @@
   import EditorSidebar from './EditorSidebar.svelte';
   import GraphPane from './GraphPane.svelte';
   import RuleEditor from './RuleEditor.svelte';
+  import RuleCoherenceView from './RuleCoherenceView.svelte';
 
   // Largeurs persistées (px)
   const leftW  = writable(parseInt(localStorage.getItem('ed_leftW'))  || 320);
@@ -12,6 +13,7 @@
   graphW.subscribe(v => localStorage.setItem('ed_graphW', String(v)));
 
   let host;
+  let showCoherenceView = false;
 
   function startDrag(which, e) {
     e.preventDefault();
@@ -43,15 +45,40 @@
   </aside>
 
   <!-- Col 2 : splitter 1 -->
-  <div class="splitter" on:mousedown={(e)=>startDrag('L', e)} />
+  <div
+    class="splitter"
+    role="separator"
+    aria-orientation="vertical"
+    tabindex="-1"
+    on:mousedown={(e)=>startDrag('L', e)}
+  />
 
   <!-- Col 3 : GraphPane large -->
   <section class="graphpane">
-    <GraphPane />
+    <div class="graphpane-toolbar">
+      <button
+        class="btn-switch"
+        type="button"
+        on:click={() => showCoherenceView = !showCoherenceView}
+      >
+        {showCoherenceView ? 'Retour au graphe' : 'Vue coherence'}
+      </button>
+    </div>
+    {#if showCoherenceView}
+      <RuleCoherenceView on:close={() => showCoherenceView = false} />
+    {:else}
+      <GraphPane />
+    {/if}
   </section>
 
   <!-- Col 4 : splitter 2 -->
-  <div class="splitter" on:mousedown={(e)=>startDrag('G', e)} />
+  <div
+    class="splitter"
+    role="separator"
+    aria-orientation="vertical"
+    tabindex="-1"
+    on:mousedown={(e)=>startDrag('G', e)}
+  />
 
   <!-- Col 5 : RuleEditor -->
   <section class="ruleeditor">
@@ -73,8 +100,33 @@
   }
 
   .panel-left  { grid-column: 1; overflow: auto; background: var(--c-box-bg); padding: 12px 16px; border-right: 1px solid var(--c-stroke); }
-  .graphpane   { grid-column: 3; overflow: hidden; display: flex; min-width: 720px; background: var(--c-bg); }
+  .graphpane   { grid-column: 3; overflow: hidden; display: flex; flex-direction: column; min-width: 720px; background: var(--c-bg); }
   .ruleeditor  { grid-column: 5; overflow: auto; background: var(--c-bg); border-left: 1px solid var(--c-stroke); }
+
+  .graphpane-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    padding: 8px;
+    gap: 8px;
+  }
+  .btn-switch {
+    border: 1px solid var(--c-stroke);
+    background: var(--c-box-bg);
+    color: var(--c-text);
+    border-radius: 8px;
+    padding: 6px 12px;
+    cursor: pointer;
+  }
+  .btn-switch:hover {
+    background: color-mix(in srgb, var(--c-box-bg) 70%, rgba(37,99,235,.12));
+  }
+  .graphpane :global(.graph-wrap),
+  .graphpane :global(.coherence-view) {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
 
   /* Le graph occupe TOUT l'espace dispo */
   .graphpane :global(svg),

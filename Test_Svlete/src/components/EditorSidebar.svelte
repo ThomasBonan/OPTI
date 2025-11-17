@@ -9,8 +9,6 @@
   let optName = '';
   let sSmart = 'absent', sMod = 'absent', sEvo = 'absent';
 
-  export let showRules = true; // par défaut: visible (utile si tu réutilises la sidebar ailleurs)
-
   // Sélection courante
   let selectedGroup = '';
   let selectedSubgroup = '__root'; // "(sans sous-groupe)"

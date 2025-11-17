@@ -17,7 +17,7 @@
   let svgEl;
   let cleanup = () => {};
 
-  // Rendu à la demande — on lit les règles “au moment du rendu”
+  // Rendu à la demande — on lit les règles “au moment du rendu�
   function rerender(preserveZoom = true) {
     cleanup();
 

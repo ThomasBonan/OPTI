@@ -125,7 +125,7 @@
           role="separator"
           aria-label="Redimensionner le résumé"
           aria-orientation="vertical"
-          tabindex="0"
+          tabindex="-1"
           on:pointerdown={onResizePointerDown}
           on:pointerup={onResizePointerUp}
         />
@@ -177,7 +177,6 @@
     flex: 0 0 auto;
     width: auto;
   }
-  .rowtools .label { color: var(--c-text-muted, #8b93a7); margin-right: 4px; }
 
   .mainrow {
     display: flex;
