@@ -195,7 +195,12 @@
   .graph-wrap { display:flex; flex-direction:column; gap:10px; height:100%; }
   svg { flex: 1 1 auto; width: 100%; height: 100%; display: block; background: transparent; }
 
-  .rules-summary { flex: 0 0 auto; }
+  .rules-summary {
+    flex: 0 0 auto;
+    max-height: min(45vh, 360px);
+    overflow-y: auto;
+    padding-right: 8px;
+  }
   .rules-summary header {
     display:flex; align-items:center; justify-content:space-between;
     margin-bottom: 8px;
