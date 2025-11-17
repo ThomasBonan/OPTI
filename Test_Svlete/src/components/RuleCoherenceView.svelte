@@ -11,10 +11,15 @@
   } from '../lib/stores.js';
 
   const NODE_W = 170;
-  const NODE_H = 62;
+  const MIN_NODE_H = 62;
   const NODE_GAP = 150;
   const ROW_GAP = 120;
   const PADDING = 70;
+  const TITLE_LINE_HEIGHT = 16;
+  const META_LINE_HEIGHT = 14;
+  const NODE_PADDING_TOP = 16;
+  const NODE_PADDING_BOTTOM = 16;
+  const NODE_SECTION_GAP = 6;
 
   const legendItems = [
     { key: 'mand', label: 'Obligatoire', stroke: 'var(--c-rule-obl-border, var(--c-rule-mand-border))' },
@@ -37,7 +42,7 @@
 
   const dispatch = createEventDispatcher();
 
-  export let title = 'Vue cohÃ©rence';
+  export let title = 'Vue cohérence';
   let svgEl;
   let contentEl;
   let highlightedNodes = new Set();
@@ -51,9 +56,9 @@
   $: gammeWarningCount = graph.gammeWarnings.length;
   $: statusLabel = (() => {
     const chunks = [];
-    if (cycleCount > 0) chunks.push(`${cycleCount} boucle(s) dÃ©tectÃ©e(s)`);
+    if (cycleCount > 0) chunks.push(`${cycleCount} boucle(s) détectée(s)`);
     if (gammeWarningCount > 0) chunks.push(`${gammeWarningCount} conflit(s) de gamme`);
-    return chunks.length ? chunks.join(' â€¢ ') : 'Relations cohÃ©rentes';
+    return chunks.length ? chunks.join(' - ') : 'Relations cohérentes';
   })();
   $: statusTone = (cycleCount > 0 || gammeWarningCount > 0) ? 'nok' : 'ok';
 
@@ -62,21 +67,47 @@
   }
 
   function wrapLines(text = '', maxChars = 18) {
-    const words = String(text ?? '').split(/\s+/).filter(Boolean);
-    if (words.length === 0) return [''];
-    const lines = [];
-    let current = words.shift();
-    for (const word of words) {
-      const candidate = current ? `${current} ${word}` : word;
-      if (candidate.length > maxChars) {
-        lines.push(current);
-        current = word;
+    const cleaned = String(text ?? '').trim();
+    if (!cleaned) return [''];
+    const expanded = [];
+    cleaned.split(/\s+/).forEach((word) => {
+      if (word.length > maxChars) {
+        for (let i = 0; i < word.length; i += maxChars) {
+          expanded.push(word.slice(i, i + maxChars));
+        }
       } else {
-        current = candidate;
+        expanded.push(word);
       }
+    });
+    const lines = [];
+    let current = '';
+    for (const word of expanded) {
+      if (!current) {
+        current = word;
+        continue;
+      }
+      const candidate = `${current} ${word}`.trim();
+      if (candidate.length <= maxChars) {
+        current = candidate;
+        continue;
+      }
+      lines.push(current);
+      current = word;
     }
     if (current) lines.push(current);
     return lines;
+  }
+
+  function computeNodeHeight(titleLines = 1, metaLines = 1) {
+    const titleBlock = Math.max(1, titleLines) * TITLE_LINE_HEIGHT;
+    const metaBlock = Math.max(1, metaLines) * META_LINE_HEIGHT;
+    return (
+      NODE_PADDING_TOP +
+      titleBlock +
+      NODE_SECTION_GAP +
+      metaBlock +
+      NODE_PADDING_BOTTOM
+    );
   }
 
   onMount(() => {
@@ -127,13 +158,15 @@
       seen.add(node);
       target.add(node);
       for (const next of adjacency.get(node) || []) {
-        queue.push(next);
+        if (!seen.has(next)) {
+          queue.push(next);
+        }
       }
     }
   }
 
   function edgeKey(edge) {
-    return `${edge.from}->${edge.to}->${edge.type}`;
+    return `${edge.from}->${edge.to}:${edge.type}`;
   }
 
   function buildGraph(rules = {}, labels = {}, gammes = {}, groupedData = {}) {
@@ -149,7 +182,7 @@
       }
     }
 
-    for (const [from, spec] of Object.entries(rules)) {
+    for (const [from, spec] of Object.entries(rules || {})) {
       nodesSet.add(from);
       for (const id of spec?.mandatory || []) {
         nodesSet.add(id);
@@ -198,15 +231,43 @@
       comp.sort((a, b) => (labels[a] || a).localeCompare(labels[b] || b, 'fr', { sensitivity: 'base' }));
       components.push(comp);
     }
-    if (components.length === 0) components.push([]);
+
+    const nodeLayout = {};
+    nodes.forEach((id) => {
+      const meta = groupMeta.get(id);
+      const metaText = meta
+        ? `[${meta.group}${meta.subgroup ? ` / ${meta.subgroup}` : ''}]`
+        : '[Non classé]';
+      const titleLines = wrapLines(labels[id] || id, 18);
+      const metaLines = wrapLines(metaText, 22);
+      nodeLayout[id] = {
+        height: computeNodeHeight(titleLines.length, metaLines.length),
+        titleLines,
+        metaLines,
+        metaText
+      };
+    });
 
     const positions = new Map();
     let maxRowLength = 0;
-    components.forEach((comp, row) => {
+    const rowHeights = components.map((comp) => {
       maxRowLength = Math.max(maxRowLength, comp.length);
+      return comp.reduce(
+        (max, id) => Math.max(max, nodeLayout[id]?.height || MIN_NODE_H),
+        MIN_NODE_H
+      );
+    });
+
+    let yOffset = 0;
+    components.forEach((comp, row) => {
+      const rowHeight = rowHeights[row] || MIN_NODE_H;
       comp.forEach((id, col) => {
-        positions.set(id, { x: col * (NODE_W + NODE_GAP), y: row * (NODE_H + ROW_GAP) });
+        positions.set(id, { x: col * (NODE_W + NODE_GAP), y: yOffset });
       });
+      yOffset += rowHeight;
+      if (row < components.length - 1) {
+        yOffset += ROW_GAP;
+      }
     });
     if (maxRowLength === 0) maxRowLength = 1;
 
@@ -235,8 +296,10 @@
 
     const width =
       (Math.max(1, maxRowLength) - 1) * (NODE_W + NODE_GAP) + NODE_W + PADDING * 2;
-    const height =
-      (Math.max(1, components.length) - 1) * (NODE_H + ROW_GAP) + NODE_H + PADDING * 2;
+    const contentHeight = components.length
+      ? rowHeights.reduce((sum, h) => sum + h, 0) + ROW_GAP * Math.max(0, components.length - 1)
+      : MIN_NODE_H;
+    const height = contentHeight + PADDING * 2;
 
     const groups = {};
     nodes.forEach((id) => {
@@ -257,6 +320,7 @@
       backward,
       gammeWarnings,
       gammeWarningKeys,
+      nodeLayout,
       cycleEdges: new Set(
         enrichedEdges
           .filter((edge) => cycles.has(edge.from) && cycles.has(edge.to))
@@ -323,12 +387,14 @@
     const start = graph.positions.get(edge.from);
     const end = graph.positions.get(edge.to);
     if (!start || !end) return '';
+    const startHeight = graph.nodeLayout?.[edge.from]?.height ?? MIN_NODE_H;
+    const endHeight = graph.nodeLayout?.[edge.to]?.height ?? MIN_NODE_H;
     const sx = start.x + NODE_W;
-    const sy = start.y + NODE_H / 2;
+    const sy = start.y + startHeight / 2;
     const ex = end.x;
-    const ey = end.y + NODE_H / 2;
+    const ey = end.y + endHeight / 2;
     const distance = Math.max(60, Math.abs(ex - sx));
-    const offset = NODE_H + edge.depth * 40;
+    const offset = Math.max(startHeight, endHeight) + edge.depth * 40;
     const belowY = Math.max(sy, ey) + offset;
 
     if (ex >= sx) {
@@ -363,23 +429,23 @@
 
   {#if graph.gammeWarnings.length}
     <div class="warning-box">
-      <strong>Conflits de gamme dÃ©tectÃ©s :</strong>
+      <strong>Conflits de gamme détectés :</strong>
       <ul>
         {#each graph.gammeWarnings as warn}
-          <li>{L(warn.from)} â†’ {L(warn.to)}</li>
+          <li>{L(warn.from)} -> {L(warn.to)}</li>
         {/each}
       </ul>
     </div>
   {/if}
 
   {#if graph.nodes.length === 0}
-    <div class="empty">Aucune rÃ¨gle Ã  analyser.</div>
+    <div class="empty">Aucune règle à analyser.</div>
   {:else}
     <div class="cv-canvas">
       <svg
         bind:this={svgEl}
         role="img"
-        aria-label="Visualisation de cohÃ©rence des rÃ¨gles"
+        aria-label="Visualisation de cohérence des règles"
         viewBox={`0 0 ${graph.width} ${graph.height}`}
         preserveAspectRatio="xMidYMid meet"
         on:click={clearHighlight}
@@ -408,29 +474,42 @@
               class={`edge ${edge.type} ${graph.cycleEdges.has(cycleKey) ? 'cycle' : ''} ${isConflict ? 'conflict' : ''} ${highlightedEdges.has(cycleKey) ? 'highlighted' : ''}`}
               stroke={isConflict ? 'var(--c-warning, #f97316)' : EDGE_COLORS[edge.type]}
               marker-end={`url(#${isConflict ? 'arrow-tip-warning' : MARKERS[edge.type]})`}
+              role="button"
+              tabindex="0"
               on:click|stopPropagation={(event) => handleEdgeClick(edge, event)}
+              on:keydown={(event) => (event.key === 'Enter' || event.key === ' ') && handleEdgeClick(edge, event)}
             />
           {/each}
 
           {#each graph.nodes as id}
             {#if graph.positions.get(id)}
               {@const pos = graph.positions.get(id)}
-              {@const meta = graph.groups[id]}
-              {@const titleLines = wrapLines(L(id), 18)}
-              {@const metaText = meta ? `[${meta.group}${meta.subgroup ? ` / ${meta.subgroup}` : ''}]` : '[Non classé]'}
-              {@const metaLines = wrapLines(metaText, 22)}
-              {@const titleStartY = NODE_H / 2 - 10 - (titleLines.length - 1) * 7}
-              {@const metaStartY = NODE_H / 2 + 18}
+              {@const layout = graph.nodeLayout?.[id]}
+              {@const rectH = layout?.height ?? MIN_NODE_H}
+              {@const titleLines = layout?.titleLines ?? wrapLines(L(id), 18)}
+              {@const metaLines = layout?.metaLines ?? ['[Non classé]']}
               <g transform={`translate(${pos.x}, ${pos.y})`} class={`node ${graph.cycles.has(id) ? 'cycle' : ''} ${highlightedNodes.has(id) ? 'highlighted' : ''}`}>
-                <rect width={NODE_W} height={NODE_H} rx="14" ry="14" />
+                <rect width={NODE_W} height={rectH} rx="14" ry="14" />
                 <text class="label-title" text-anchor="middle">
                   {#each titleLines as line, idx}
-                    <tspan x={NODE_W / 2} y={titleStartY + idx * 14} dominant-baseline="middle">{line}</tspan>
+                    <tspan
+                      x={NODE_W / 2}
+                      y={NODE_PADDING_TOP + idx * TITLE_LINE_HEIGHT}
+                      dominant-baseline="middle"
+                    >
+                      {line}
+                    </tspan>
                   {/each}
                 </text>
                 <text class="label-meta" text-anchor="middle">
                   {#each metaLines as line, idx}
-                    <tspan x={NODE_W / 2} y={metaStartY + idx * 14} dominant-baseline="middle">{line}</tspan>
+                    <tspan
+                      x={NODE_W / 2}
+                      y={NODE_PADDING_TOP + Math.max(1, titleLines.length) * TITLE_LINE_HEIGHT + NODE_SECTION_GAP + idx * META_LINE_HEIGHT}
+                      dominant-baseline="middle"
+                    >
+                      {line}
+                    </tspan>
                   {/each}
                 </text>
               </g>
