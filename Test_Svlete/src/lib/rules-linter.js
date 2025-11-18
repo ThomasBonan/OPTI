@@ -50,14 +50,14 @@ function lintRuleset(rulesetName, rules, knownIds) {
     const man = normalizeArr(spec?.mandatory || spec?.obligatoire);
 
     if (!knownIds.has(from)) {
-      push('unknown_from', 'error', { from, message: `RÃ¨gle sur une option inconnue: ${from}` });
+      push('unknown_from', 'error', { from, message: `Règle sur une option inconnue: ${from}` });
     }
 
     req.forEach(to => {
-      if (!knownIds.has(to)) push('unknown_target', 'error', { from, to, edge: 'requires', message: `DÃ©pendance vers un ID inconnu: ${from} -> ${to}` });
+      if (!knownIds.has(to)) push('unknown_target', 'error', { from, to, edge: 'requires', message: `Dépendance vers un ID inconnu: ${from} -> ${to}` });
     });
     inc.forEach(to => {
-      if (!knownIds.has(to)) push('unknown_target', 'error', { from, to, edge: 'incompatible_with', message: `IncompatibilitÃ© avec un ID inconnu: ${from} || ${to}` });
+      if (!knownIds.has(to)) push('unknown_target', 'error', { from, to, edge: 'incompatible_with', message: `Incompatibilité avec un ID inconnu: ${from} || ${to}` });
     });
     man.forEach(to => {
       if (!knownIds.has(to)) push('unknown_target', 'error', { from, to, edge: 'mandatory', message: `Obligation vers un ID inconnu: ${from} -> ${to}` });
@@ -69,7 +69,7 @@ function lintRuleset(rulesetName, rules, knownIds) {
     });
     (spec?.incompatible_groups || []).forEach((group) => {
       (Array.isArray(group?.of) ? group.of : []).forEach((to) => {
-        if (!knownIds.has(to)) push('unknown_target', 'error', { from, to, edge: 'incompatible_group', message: `IncompatibilitÃ© groupÃ©e vers un ID inconnu: ${from} -> ${to}` });
+        if (!knownIds.has(to)) push('unknown_target', 'error', { from, to, edge: 'incompatible_group', message: `Incompatibilité groupée vers un ID inconnu: ${from} -> ${to}` });
       });
     });
   }
@@ -82,18 +82,18 @@ function lintRuleset(rulesetName, rules, knownIds) {
     const man = dedupe(normalizeArr(spec?.mandatory));
 
     if (spec?.requires && req.length !== spec.requires.length) {
-      push('duplicate', 'warning', { from, edge: 'requires', message: `Doublons retirÃ©s suggÃ©rÃ©s dans "requires" de ${from}` });
+      push('duplicate', 'warning', { from, edge: 'requires', message: `Doublons retirés suggérés dans "requires" de ${from}` });
     }
     if (spec?.incompatible_with && inc.length !== spec.incompatible_with.length) {
-      push('duplicate', 'warning', { from, edge: 'incompatible_with', message: `Doublons retirÃ©s suggÃ©rÃ©s dans "incompatible_with" de ${from}` });
+      push('duplicate', 'warning', { from, edge: 'incompatible_with', message: `Doublons retirés suggérés dans "incompatible_with" de ${from}` });
     }
     if (spec?.mandatory && man.length !== spec.mandatory.length) {
-      push('duplicate', 'warning', { from, edge: 'mandatory', message: `Doublons retirÃ©s suggÃ©rÃ©s dans "mandatory" de ${from}` });
+      push('duplicate', 'warning', { from, edge: 'mandatory', message: `Doublons retirés suggérés dans "mandatory" de ${from}` });
     }
 
-    if (req.includes(from)) push('self_dependency', 'error', { from, message: `Auto-dÃ©pendance: ${from} requiert ${from}` });
-    if (inc.includes(from)) push('self_incompatibility', 'error', { from, message: `Auto-incompatibilitÃ©: ${from} incompatible avec ${from}` });
-    if (man.includes(from)) push('self_mandatory', 'error', { from, message: `Auto-obligation: ${from} est obligatoire pour lui-mÃªme` });
+    if (req.includes(from)) push('self_dependency', 'error', { from, message: `Auto-dépendance: ${from} requiert ${from}` });
+    if (inc.includes(from)) push('self_incompatibility', 'error', { from, message: `Auto-incompatibilité: ${from} incompatible avec ${from}` });
+    if (man.includes(from)) push('self_mandatory', 'error', { from, message: `Auto-obligation: ${from} est obligatoire pour lui-même` });
 
     // contradictions directes
     for (const to of req) {
@@ -160,17 +160,17 @@ export function labelOf(id, optionLabels) {
 export function formatIssue(issue, optionLabels) {
   const L = (id) => labelOf(id, optionLabels);
   switch (issue.type) {
-    case 'unknown_from': return `RÃ¨gle sur une option inconnue: ${L(issue.from)}`;
+    case 'unknown_from': return `Règle sur une option inconnue: ${L(issue.from)}`;
     case 'unknown_target': return `${L(issue.from)} -> ${L(issue.to)} (${issue.edge}) pointe vers un ID inconnu`;
-    case 'self_dependency': return `Auto-dÃ©pendance: ${L(issue.from)} requiert lui-mÃªme`;
-    case 'self_incompatibility': return `Auto-incompatibilitÃ©: ${L(issue.from)} incompatible avec lui-mÃªme`;
-    case 'self_mandatory': return `Auto-obligation: ${L(issue.from)} est obligatoire pour lui-mÃªme`;
-    case 'duplicate': return `Doublons dÃ©tectÃ©s dans ${issue.edge} de ${L(issue.from)} (nettoyage possible)`;
+    case 'self_dependency': return `Auto-dépendance: ${L(issue.from)} requiert lui-même`;
+    case 'self_incompatibility': return `Auto-incompatibilité: ${L(issue.from)} incompatible avec lui-même`;
+    case 'self_mandatory': return `Auto-obligation: ${L(issue.from)} est obligatoire pour lui-même`;
+    case 'duplicate': return `Doublons détectés dans ${issue.edge} de ${L(issue.from)} (nettoyage possible)`;
     case 'contradiction_direct': return `Contradiction: ${L(issue.from)} requiert ${L(issue.to)} et incompatible avec ${L(issue.to)}`;
-    case 'contradiction_cross': return `Contradiction croisÃ©e: ${L(issue.from)} requiert ${L(issue.to)}, mais ${L(issue.to)} incompatible avec ${L(issue.from)}`;
+    case 'contradiction_cross': return `Contradiction croisée: ${L(issue.from)} requiert ${L(issue.to)}, mais ${L(issue.to)} incompatible avec ${L(issue.from)}`;
     case 'contradiction_mandatory_direct': return `Contradiction: ${L(issue.from)} rend ${L(issue.to)} obligatoire mais incompatible avec ${L(issue.to)}`;
-    case 'contradiction_mandatory_cross': return `Contradiction croisÃ©e: ${L(issue.from)} rend ${L(issue.to)} obligatoire, mais ${L(issue.to)} incompatible avec ${L(issue.from)}`;
-    case 'cycle_requires': return `Cycle de dÃ©pendances: ${issue.path.map(L).join(' -> ')}`;
+    case 'contradiction_mandatory_cross': return `Contradiction croisée: ${L(issue.from)} rend ${L(issue.to)} obligatoire, mais ${L(issue.to)} incompatible avec ${L(issue.from)}`;
+    case 'cycle_requires': return `Cycle de dépendances: ${issue.path.map(L).join(' -> ')}`;
     case 'cycle_mandatory': return `Cycle d'obligations: ${issue.path.map(L).join(' -> ')}`;
     default: return issue.message || issue.type;
   }

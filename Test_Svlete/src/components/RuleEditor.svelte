@@ -1,4 +1,4 @@
-<script>
+﻿<script>
   import { get } from 'svelte/store';
   import { onDestroy } from 'svelte';
   import OptionPicker from './OptionPicker.svelte';
@@ -54,7 +54,7 @@
       const rulesNew = mutator({ ...rulesOld });
       return { ...rs0, [name]: { ...payload, rules: rulesNew } };
     });
-    // rien d'autre : on laisse $rulesets/$currentRulesetName dÃ©clencher les $: ci-dessus
+    // rien d'autre : on laisse $rulesets/$currentRulesetName déclencher les $: ci-dessus
   }
 
   // --- Ajouts auto ---
@@ -232,16 +232,16 @@
 <div class="rule-editor">
   <!-- Source -->
   <div class="section">
-    <div class="label">NÅud Ã  modifier</div>
+    <div class="label">Noeuds à modifier</div>
     <div class="row">
-      <OptionPicker items={flat} bind:value={src} placeholder="Rechercher / choisir le nÅud Ã  modifier..." showPath />
+      <OptionPicker items={flat} bind:value={src} placeholder="Rechercher / choisir le nœud à modifier..." showPath />
       {#if src}
-        <button class="btn" type="button" on:click={() => { src = null; }} title="Effacer">Ã</button>
+        <button class="btn" type="button" on:click={() => { src = null; }} title="Effacer">×</button>
       {/if}
     </div>
     {#if src}
       <div class="picked">
-        <div class="picked-title">SÃ©lectionnÃ© :</div>
+        <div class="picked-title">Sélectionné :</div>
         <div class="picked-name">{L(src)}</div>
         <div class="picked-path">{PATH(src)}</div>
       </div>
@@ -254,7 +254,7 @@
     <!-- Obligatoire -->
     <div class="section">
       <div class="label">Obligatoire</div>
-      <div class="hint">Si <strong>{L(src)}</strong> est choisie, les options ci-dessous sont auto-sÃ©lectionnÃ©es.</div>
+      <div class="hint">Si <strong>{L(src)}</strong> est choisie, les options ci-dessous sont auto-sélectionnées.</div>
 
       <OptionPicker
         items={flat.filter(o => o.id !== src && !(getSpec(src).mandatory || []).includes(o.id))}
@@ -270,7 +270,7 @@
           {#each (getSpec(src).mandatory || []) as id}
             <span class="chip">
               {L(id)} <small class="path">{PATH(id)}</small>
-              <button class="x" type="button" on:click|stopPropagation={() => removeMandatory(id)} title="Retirer">Ã</button>
+              <button class="x" type="button" on:click|stopPropagation={() => removeMandatory(id)} title="Retirer">×</button>
             </span>
           {/each}
         </div>
@@ -279,8 +279,8 @@
 
     <!-- Groupes k-sur-n -->
     <div class="section">
-      <div class="label">Groupes de dÃ©pendances (k-sur-n)</div>
-      <div class="hint">Chaque groupe dÃ©finit un minimum <code>k</code> d'options Ã  respecter. <strong>Tous</strong> les groupes doivent Ãªtre satisfaits.</div>
+      <div class="label">Groupes de dépendances (k-sur-n)</div>
+      <div class="hint">Chaque groupe définit un minimum <code>k</code> d'options à respecter. <strong>Tous</strong> les groupes doivent être satisfaits.</div>
 
       <button class="btn primary" type="button" on:click={addDependencyGroup}>+ Ajouter un groupe</button>
 
@@ -289,7 +289,7 @@
           <div class="group-head">
             <label>min</label>
             <input type="number" min="0" max={g.of?.length || 0} value={g.min} on:change={(e) => setDependencyGroupMin(i, e.currentTarget.value)} />
-            <button class="btn" type="button" on:click={() => removeDependencyGroup(i)} title="Supprimer le groupe">ð</button>
+            <button class="btn" type="button" on:click={() => removeDependencyGroup(i)} title="Supprimer le groupe">❑</button>
           </div>
 
           <OptionPicker
@@ -315,10 +315,10 @@
       {/each}
     </div>
 
-    <!-- Groupes d'incompatibilitÃ©s -->
+    <!-- Groupes d'incompatibilités -->
     <div class="section">
-      <div class="label">Groupes d'incompatibilitÃ©s (k-sur-n)</div>
-      <div class="hint">Si <strong>{L(src)}</strong> est prÃ©sentÃ© en mÃªme temps qu'au moins <code>k</code> options d'un groupe, il devient indisponible.</div>
+      <div class="label">Groupes d'incompatibilités (k-sur-n)</div>
+      <div class="hint">Si <strong>{L(src)}</strong> est présenté en même temps qu'au moins <code>k</code> options d'un groupe, il devient indisponible.</div>
 
       <button class="btn primary" type="button" on:click={addIncompatGroup}>+ Ajouter un groupe</button>
 
@@ -327,7 +327,7 @@
           <div class="group-head">
             <label>min</label>
             <input type="number" min="0" max={g.of?.length || 0} value={g.min} on:change={(e) => setIncompatGroupMin(i, e.currentTarget.value)} />
-            <button class="btn" type="button" on:click={() => removeIncompatGroup(i)} title="Supprimer le groupe">ð</button>
+            <button class="btn" type="button" on:click={() => removeIncompatGroup(i)} title="Supprimer le groupe">❑</button>
           </div>
 
           <OptionPicker
@@ -360,18 +360,18 @@
       <OptionPicker
         items={flat.filter(o => o.id !== src && !(getSpec(src).incompatible_with || []).includes(o.id))}
         bind:value={pickIncomp}
-        placeholder="Rechercher et ajouter une incompatibilitÃ©..."
+        placeholder="Rechercher et ajouter une incompatibilité..."
         showPath
       />
 
       {#if (getSpec(src).incompatible_with || []).length === 0}
-        <div class="muted">Aucune incompatibilitÃ©.</div>
+        <div class="muted">Aucune incompatibilité.</div>
       {:else}
         <div class="chips">
           {#each (getSpec(src).incompatible_with || []) as id}
             <span class="chip danger">
               {L(id)} <small class="path">{PATH(id)}</small>
-              <button class="x" type="button" on:click|stopPropagation={() => removeIncompatible(id)} title="Retirer">Ã</button>
+              <button class="x" type="button" on:click|stopPropagation={() => removeIncompatible(id)} title="Retirer">×</button>
             </span>
           {/each}
         </div>

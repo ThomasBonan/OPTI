@@ -61,7 +61,7 @@
         type="button"
         on:click={() => showCoherenceView = !showCoherenceView}
       >
-        {showCoherenceView ? 'Retour au graphe' : 'Vue coherence'}
+        {showCoherenceView ? 'Retour au graphe' : 'Vue cohérence'}
       </button>
     </div>
     {#if showCoherenceView}

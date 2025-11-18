@@ -1,4 +1,4 @@
-// ============================================================================
+﻿// ============================================================================
 // stores.js
 // ----------------------------------------------------------------------------
 // Centralise tous les stores Svelte utilises par le configurateur/editeur :
@@ -771,7 +771,7 @@ function buildPayloadJSON() {
   try {
     return JSON.stringify(buildPayload());
   } catch (err) {
-    console.warn('Impossible de generer le payload courant', err);
+    console.warn('Impossible de générer le payload courant', err);
     return null;
   }
 }
@@ -1109,7 +1109,7 @@ export async function logoutUser() {
 export async function createUserAccount(username, password) {
   const current = get(authUser);
   if (!current?.isBootstrap) {
-    throw new Error('Seul le compte bootstrap peut creer un utilisateur.');
+    throw new Error('Seul le compte bootstrap peut créer un utilisateur.');
   }
   const payload = {
     username: String(username || '').trim(),
@@ -1126,7 +1126,7 @@ export async function createUserAccount(username, password) {
     return data?.user || null;
   } catch (err) {
     if (err?.status === 403) {
-      throw new Error('Seul le compte bootstrap peut creer un utilisateur.');
+      throw new Error('Seul le compte bootstrap peut créer un utilisateur.');
     }
     throw err;
   }
@@ -1167,7 +1167,7 @@ export async function refreshAuditSummaries() {
 export async function loadSchemaFromDatabase(id) {
   if (!id) throw new Error('Schema id manquant');
   const record = await apiFetch(`/api/schemas/${id}`);
-  if (!record?.payload) throw new Error('Reponse inattendue depuis le serveur');
+  if (!record?.payload) throw new Error('Réponse inattendue depuis le serveur');
   if (typeof window !== 'undefined') {
     window.__lastRecord = record;
   }
@@ -1186,7 +1186,7 @@ export async function saveSchemaToDatabase(
   { id = null, payloadOverride = null, skipSetActive = false, archived: archivedOverride = undefined } = {}
 ) {
   const trimmed = String(name || '').trim();
-  if (!trimmed) throw new Error('Nom de schema obligatoire');
+  if (!trimmed) throw new Error('Nom de schéma obligatoire');
 
   const payload = payloadOverride || buildPayload();
   const current = get(activeSchema);
@@ -1285,7 +1285,7 @@ export async function fetchSchemaAudit(id) {
     return events;
   } catch (err) {
     if (err?.status === 401) {
-      throw new Error('Connexion requise pour consulter l audit.');
+      throw new Error('Connexion requise pour consulter l\'audit.');
     }
     throw err;
   }
@@ -1294,7 +1294,7 @@ export async function fetchSchemaAudit(id) {
 export function openAuditPanel(schemaId = null) {
   const user = get(authUser);
   if (!user?.isBootstrap) {
-    throw new Error('Acces reserve au compte bootstrap.');
+    throw new Error('Accès réservé au compte bootstrap.');
   }
   auditSelectedSchemaId.set(schemaId);
   auditPanelOpen.set(true);
@@ -1308,7 +1308,7 @@ export function closeAuditPanel() {
 export function openSystemHealthPanel() {
   const user = get(authUser);
   if (!user?.isBootstrap) {
-    throw new Error('Acces reserve au compte bootstrap.');
+    throw new Error('Accès réservé au compte bootstrap.');
   }
   systemHealthPanelOpen.set(true);
 }
@@ -1320,7 +1320,7 @@ export function closeSystemHealthPanel() {
 export async function refreshSystemHealth() {
   const user = get(authUser);
   if (!user?.isBootstrap) {
-    throw new Error('Acces reserve au compte bootstrap.');
+    throw new Error('Accès réservé au compte bootstrap.');
   }
   const start =
     typeof performance !== 'undefined' && typeof performance.now === 'function'
@@ -1339,7 +1339,7 @@ export async function refreshSystemHealth() {
     systemHealthLatencyMs.set(Math.max(0, end - start));
     return payload;
   } catch (err) {
-    systemHealthError.set(err?.message || 'Impossible de recuperer la sante du systeme.');
+    systemHealthError.set(err?.message || 'Impossible de récupérer la santé du système.');
     throw err;
   } finally {
     systemHealthLoading.set(false);

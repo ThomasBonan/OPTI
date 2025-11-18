@@ -163,10 +163,10 @@
           <section>
             <h3>Actions disponibles</h3>
             <ul>
-              <li>Selectionner un schema via la liste deroulante.</li>
-              <li><strong>Importer</strong> / <strong>Exporter JSON</strong> pour partager un schema.</li>
-              <li><strong>Reinitialiser</strong> pour revenir a l etat neutre.</li>
-              <li>Basculer le theme clair/sombre depuis le menu.</li>
+              <li>Sélectionner un schéma via la liste déroulante.</li>
+              <li><strong>Importer</strong> / <strong>Exporter JSON</strong> pour partager un schéma.</li>
+              <li><strong>Réinitialiser</strong> pour revenir à l'état neutre.</li>
+              <li>Basculer le thème clair/sombre depuis le menu.</li>
             </ul>
           </section>
           <section>
@@ -180,14 +180,14 @@
             <h3>Bonnes pratiques</h3>
             <ul>
               <li>Utiliser les filtres (groupe, gamme) pour isoler un sous-ensemble.</li>
-              <li>Verifier les toasts apres import/export pour confirmer l action.</li>
-              <li>Consulter le resume pour controler les regles appliquees.</li>
+              <li>érifier les toasts après import/export pour confirmer l'action.</li>
+              <li>Consulter le résumé pour contrôler les règles appliquées.</li>
             </ul>
           </section>
         {/if}
       {:else}
         <section class="readme-intro">
-          <p>Ce resume reprend les actions frequentes et les points d attention pour la petite equipe terrain.</p>
+          <p>Ce résumé reprend les actions fréquentes et les points d'attention pour la petite équipe terrain.</p>
         </section>
         {#each readmeSections as section (section.id)}
           <section>

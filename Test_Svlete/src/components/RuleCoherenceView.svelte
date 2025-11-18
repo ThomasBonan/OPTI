@@ -56,9 +56,9 @@
   $: gammeWarningCount = graph.gammeWarnings.length;
   $: statusLabel = (() => {
     const chunks = [];
-    if (cycleCount > 0) chunks.push(`${cycleCount} boucle(s) dÃ©tectÃ©e(s)`);
+    if (cycleCount > 0) chunks.push(`${cycleCount} boucle(s) détectée(s)`);
     if (gammeWarningCount > 0) chunks.push(`${gammeWarningCount} conflit(s) de gamme`);
-    return chunks.length ? chunks.join(' - ') : 'Relations cohÃ©rentes';
+    return chunks.length ? chunks.join(' - ') : 'Relations cohérentes';
   })();
   $: statusTone = (cycleCount > 0 || gammeWarningCount > 0) ? 'nok' : 'ok';
 
@@ -451,7 +451,7 @@
 
   {#if graph.gammeWarnings.length}
     <div class="warning-box">
-      <strong>Conflits de gamme dÃ©tectÃ©s :</strong>
+      <strong>Conflits de gamme détectés :</strong>
       <ul>
         {#each graph.gammeWarnings as warn}
           <li>{L(warn.from)} -> {L(warn.to)}</li>
@@ -461,13 +461,13 @@
   {/if}
 
   {#if graph.nodes.length === 0}
-    <div class="empty">Aucune rÃ¨gle Ã  analyser.</div>
+    <div class="empty">Aucune règle à analyser.</div>
   {:else}
     <div class="cv-canvas">
       <svg
         bind:this={svgEl}
         role="img"
-        aria-label="Visualisation de cohÃ©rence des rÃ¨gles"
+        aria-label="Visualisation de cohérence des règles"
         viewBox={`0 0 ${graph.width} ${graph.height}`}
         preserveAspectRatio="xMidYMid meet"
         on:click={clearHighlight}

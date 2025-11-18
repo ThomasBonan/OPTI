@@ -344,7 +344,7 @@ export function renderGraph(svgEl, ctx) {
   /* ---------- lÃ©gende ---------- */
   const legend = svg.append('g').attr('transform','translate(16,16)');
   const legendItems = [
-    {key:'req', label:'BloquÃ© par dÃ©pendance',  boxFill:()=>pal.cReqBg,  boxStroke:()=>pal.cReqBorder, stripe:()=>pal.cReqBorder},
+    {key:'req', label:'Bloqué par dépendance',  boxFill:()=>pal.cReqBg,  boxStroke:()=>pal.cReqBorder, stripe:()=>pal.cReqBorder},
     {key:'inc', label:'Incompatible',           boxFill:()=>pal.cIncBg,  boxStroke:()=>pal.cIncBorder, stripe:()=>pal.cIncBorder},
     {key:'man', label:'Obligatoire',            boxFill:()=>'none',      boxStroke:()=>pal.cMandBorder, stripe:()=>pal.cMandBorder},
     {key:'opt', label:'Optionnelle (gamme)',    boxFill:()=>'url(#hatch)', boxStroke:()=>pal.cStroke,   stripe:()=>pal.cStroke}
@@ -592,7 +592,7 @@ export function renderGraph(svgEl, ctx) {
 
             const ng = normalizedRequiresGroups(spec);
             if (ng.length) {
-              lines.push('DÃ©pendances :');
+              lines.push('Dépendances :');
               ng.forEach((group) => {
                 const ms = missingGroups.find((x) => x.of.join('|') === group.of.join('|') && x.min === Math.max(0, Math.min(Number.isFinite(+group.min) ? +group.min : group.of.length, group.of.length)));
                 const countSel = (group.of || []).filter((x) => selectedValue.has(x)).length;
@@ -615,12 +615,12 @@ export function renderGraph(svgEl, ctx) {
             }
 
             if (incompatibleStates.length) {
-              lines.push('IncompatibilitÃ©s conditionnelles :');
+              lines.push('Incompatibilités conditionnelles :');
               incompatibleStates.forEach((state) => {
                 const lhs = state.min >= state.of.length ? 'Tous' : (state.min === 1 ? '>=1' : `>=${state.min}`);
                 const base = `- ${lhs} parmi (${state.of.map((x) => optionLabels[x] || x).join(', ')}) - ${state.count}/${state.of.length}`;
                 if (state.active) {
-                  lines.push(base + ` - blocage (sÃ©lection : ${state.present.map((x) => optionLabels[x] || x).join(', ')})`);
+                  lines.push(base + ` - blocage (sélection : ${state.present.map((x) => optionLabels[x] || x).join(', ')})`);
                 } else {
                   lines.push(base);
                 }
@@ -810,7 +810,7 @@ export function renderGraph(svgEl, ctx) {
       .attr('fill', pal.cTextMuted)
       .attr('font-size', 15)
       .attr('font-weight', 600)
-      .text('Aucune option  afficher. Ajoutez une option dans un groupe ou un sous-groupe.');
+      .text('Aucune option àafficher. Ajoutez une option dans un groupe ou un sous-groupe.');
   } else {
     if (preserveZoom && st.transform) { svg.call(zoom.transform, st.transform); }
     else { setTimeout(recenter, 0); }

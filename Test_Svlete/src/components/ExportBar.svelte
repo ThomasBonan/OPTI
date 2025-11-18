@@ -80,17 +80,17 @@
 
   <span class="label">Fond :</span>
   <button class="chip {bg==='white' ? 'active' : ''}" on:click={() => (bg='white')} title="Fond blanc">[]</button>
-  <button class="chip {bg==='transparent' ? 'active' : ''}" on:click={() => (bg='transparent')} title="Fond transparent">Ã¸</button>
+  <button class="chip {bg==='transparent' ? 'active' : ''}" on:click={() => (bg='transparent')} title="Fond transparent">❑</button>
 
   <span class="sep"></span>
 
-  <label class="label" for="pngScale">Ãchelle PNG :</label>
+  <label class="label" for="pngScale">Échelle PNG :</label>
   <input id="pngScale" class="input" type="number" min="1" max="6" step="1" bind:value={pngScale} />
 
   <span class="sep"></span>
 
   <!-- NOUVEAU -->
-  <button class="btn accent" on:click={() => exportSelectionListTXT()} title="Exporter la liste des options sÃ©lectionnÃ©es (TXT)">
+  <button class="btn accent" on:click={() => exportSelectionListTXT()} title="Exporter la liste des options sélectionnées (TXT)">
     Liste
   </button>
 </div>

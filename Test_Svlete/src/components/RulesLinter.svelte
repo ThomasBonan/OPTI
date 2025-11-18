@@ -6,7 +6,7 @@
   let showOnly = 'active';   // 'active' | 'all'
   let showSeverity = 'all';  // 'all' | 'error' | 'warning'
 
-  // Lint recalculÃ© Ã  chaque changement de grouped/rulesets
+  // Lint recalculé à chaque changement de grouped/rulesets
   $: results = lintAllRulesets($grouped, $rulesets);
 
   // Ruleset actif
@@ -23,7 +23,7 @@
     });
   }
 
-  // Sections Ã  afficher selon le filtre
+  // Sections à afficher selon le filtre
   $: sections =
     showOnly === 'active'
       ? [{ name: active, issues: filteredIssues(active) }]
@@ -47,14 +47,14 @@
         </select>
       </label>
       <label>
-        GravitÃ©
+        Gravité
         <select bind:value={showSeverity}>
           <option value="all">Toutes</option>
           <option value="error">Erreurs</option>
           <option value="warning">Avertissements</option>
         </select>
       </label>
-      <button class="btn danger" on:click={runAutofix}>Autofix (sÃ©curisÃ©)</button>
+      <button class="btn danger" on:click={runAutofix}>Autofix (sécurisé)</button>
     </div>
   </div>
 
@@ -66,9 +66,9 @@
 
   {#each sections as sec (sec.name)}
     <div class="section">
-      <h4>Ruleset Â« {sec.name} Â» - {sec.issues.length} problÃ¨me{sec.issues.length>1 ? 's' : ''}</h4>
+      <h4>Ruleset « {sec.name} » - {sec.issues.length} problème{sec.issues.length>1 ? 's' : ''}</h4>
       {#if sec.issues.length === 0}
-        <p class="muted">Aucun problÃ¨me dÃ©tectÃ©.</p>
+        <p class="muted">Aucun problème détecté.</p>
       {:else}
         <ul class="list">
           {#each sec.issues as it}

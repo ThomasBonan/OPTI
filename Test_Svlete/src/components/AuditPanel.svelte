@@ -34,9 +34,9 @@ $: selectedId = $auditSelectedSchemaId;
 function actionLabel(action) {
   switch (action) {
     case 'create':
-      return 'Creation';
+      return 'Création';
     case 'update':
-      return 'Mise a jour';
+      return 'Mise à jour';
     case 'archive':
       return 'Archive';
     case 'unarchive':

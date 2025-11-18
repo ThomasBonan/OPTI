@@ -49,7 +49,7 @@ try {
   await fs.access(indexHtmlPath);
   hasBuiltClient = true;
 } catch {
-  console.warn('Aucun build statique detecte. Le serveur REST tournera sans contenu statique.');
+  console.warn('Aucun build statique détecté. Le serveur REST tournera sans contenu statique.');
 }
 
 const db = new Database(dbFile);
@@ -787,13 +787,30 @@ app.delete(`${API_PREFIX}/schemas/:id`, requireAuth, (req, res) => {
   res.status(204).end();
 });
 
+function applyCharsetHeaders(res, filePath) {
+  const lower = filePath.toLowerCase();
+  if (lower.endsWith('.html')) {
+    res.setHeader('Content-Type', 'text/html; charset=ISO-8859-1');
+  } else if (lower.endsWith('.js')) {
+    res.setHeader('Content-Type', 'application/javascript; charset=ISO-8859-1');
+  } else if (lower.endsWith('.css')) {
+    res.setHeader('Content-Type', 'text/css; charset=ISO-8859-1');
+  }
+}
+
 if (hasBuiltClient) {
-  app.use(express.static(distDir, { extensions: ['html'] }));
+  app.use(
+    express.static(distDir, {
+      extensions: ['html'],
+      setHeaders: (res, filePath) => applyCharsetHeaders(res, filePath)
+    })
+  );
   app.get('*', (_req, res, next) => {
     if (!hasBuiltClient) {
       next();
       return;
     }
+    res.setHeader('Content-Type', 'text/html; charset=ISO-8859-1');
     res.sendFile(indexHtmlPath);
   });
 }

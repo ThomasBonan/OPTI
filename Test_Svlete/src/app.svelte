@@ -25,7 +25,7 @@
   let EditorLayoutComponent = null;
   let editorLoading = false;
 
-  const pageTitle = 'Vue Ãditeur';
+  const pageTitle = 'Vue Éditeur';
 
   const MIN_SUMMARY_WIDTH = 260;
   const MAX_SUMMARY_WIDTH = 520;
@@ -123,7 +123,7 @@
         <div
           class="split-handle"
           role="separator"
-          aria-label="Redimensionner le rÃ©sumÃ©"
+          aria-label="Redimensionner le résumé"
           aria-orientation="vertical"
           tabindex="-1"
           on:pointerdown={onResizePointerDown}

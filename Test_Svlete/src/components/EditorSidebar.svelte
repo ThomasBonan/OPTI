@@ -105,7 +105,7 @@
     <button class="btn" on:click={addGroup}>Ajouter</button>
   </div>
 
-  <label for="groupSelect">Groupe sÃ©lectionnÃ©</label>
+  <label for="groupSelect">Groupe sélectionné</label>
   <select id="groupSelect" bind:value={selectedGroup}>
     {#each groupKeys as g}<option value={g}>{g}</option>{/each}
   </select>
@@ -119,7 +119,7 @@
     <button class="btn" on:click={addSubgroup} disabled={!selectedGroup}>Ajouter</button>
   </div>
 
-  <label for="subgroupSelect">Sous-groupe sÃ©lectionnÃ©</label>
+  <label for="subgroupSelect">Sous-groupe sélectionné</label>
   <select id="subgroupSelect" bind:value={selectedSubgroup} disabled={!selectedGroup}>
     <option value="__root">(sans sous-groupe)</option>
     {#each subKeys as sg}<option value={sg}>{sg}</option>{/each}
@@ -135,7 +135,7 @@
     <label for="smartSel" style="width:80px">Smart</label>
     <select id="smartSel" bind:value={sSmart}>
       <option value="absent">Absent</option>
-      <option value="included">PrÃ©sent</option>
+      <option value="included">Présent</option>
       <option value="optional">Optionnelle</option>
     </select>
   </div>
@@ -143,7 +143,7 @@
     <label for="modSel" style="width:80px">Mod</label>
     <select id="modSel" bind:value={sMod}>
       <option value="absent">Absent</option>
-      <option value="included">PrÃ©sent</option>
+      <option value="included">Présent</option>
       <option value="optional">Optionnelle</option>
     </select>
   </div>
@@ -151,13 +151,13 @@
     <label for="evoSel" style="width:80px">Evo</label>
     <select id="evoSel" bind:value={sEvo}>
       <option value="absent">Absent</option>
-      <option value="included">PrÃ©sent</option>
+      <option value="included">Présent</option>
       <option value="optional">Optionnelle</option>
     </select>
   </div>
 
   <button class="btn primary" on:click={addOption} disabled={!selectedGroup}>
-    Ajouter l'option {selectedSubgroup === '__root' ? 'au groupe (sans sous-groupe)' : `au sous-groupe Â« ${selectedSubgroup} Â»`}
+    Ajouter l'option {selectedSubgroup === '__root' ? 'au groupe (sans sous-groupe)' : `au sous-groupe « ${selectedSubgroup} »`}
   </button>
 </div>
 

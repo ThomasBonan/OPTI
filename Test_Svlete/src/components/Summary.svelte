@@ -18,17 +18,17 @@
 </script>
 
 <div class="card">
-  <h3>RÃ©sumÃ© gammes</h3>
+  <h3>Résumé gammes</h3>
   {#if sel.length === 0}
-    <p class="muted">Aucune option sÃ©lectionnÃ©e. Toutes les gammes sont potentielles (Smart, Mod, Evo).</p>
+    <p class="muted">Aucune option sélectionnée. Toutes les gammes sont potentielles (Smart, Mod, Evo).</p>
   {:else}
     <p><strong>Gammes compatibles :</strong> {compat.length ? compat.join(', ') : 'aucune'}</p>
     {#if compat.length === 0}
-      <p class="muted">Aucune gamme ne couvre l'ensemble de la sÃ©lection.</p>
+      <p class="muted">Aucune gamme ne couvre l'ensemble de la sélection.</p>
     {/if}
 
     <details>
-      <summary>Pourquoi ? (dÃ©tails par gamme)</summary>
+      <summary>Pourquoi ? (détails par gamme)</summary>
       {#each keys as k}
         <div class="line">
           <span class="k">{k}</span>

@@ -1,4 +1,4 @@
-?<!--
+﻿?<!--
   GraphPane.svelte
   ------------------------------
   Se charge du rendu D3 du graphe des options et gÃ¨re les rÃ©sumÃ©s des rÃ¨gles
@@ -177,22 +177,22 @@
 </script>
 
 <div class="graph-wrap">
-  <svg bind:this={svgEl} role="img" aria-label="Graphe des options et rÃÂ¨gles"></svg>
+  <svg bind:this={svgEl} role="img" aria-label="Graphe des options et règles"></svg>
 
   {#if $mode === 'editor'}
     <section class="rules-summary panel" aria-live="polite">
       <header>
-        <strong>RÃÂ©sumÃÂ© des rÃÂ¨gles</strong>
+        <strong>Résumé des règles</strong>
         <span class="counts">
           {flatSummary.length} options -
           {flatSummary.reduce((n,r)=>n+(r.mandatory?.length||0),0)} obligatoires -
-          {flatSummary.reduce((n,r)=>n+(r.dependencyCount||0),0)} dÃ©pendances -
-          {flatSummary.reduce((n,r)=>n+(r.incompatible_with?.length||0)+(r.incompatibleGroupCount||0),0)} incompatibilitÃ©s
+          {flatSummary.reduce((n,r)=>n+(r.dependencyCount||0),0)} dépendances -
+          {flatSummary.reduce((n,r)=>n+(r.incompatible_with?.length||0)+(r.incompatibleGroupCount||0),0)} incompatibilités
         </span>
       </header>
 
       {#if flatSummary.length === 0}
-        <div class="empty">Aucune rÃÂ¨gle dÃÂ©finie pour lÃ¢EURTMinstant.</div>
+        <div class="empty">Aucune règle définie pour l’instant.</div>
       {:else}
         <div class="summary-grid">
           {#each flatSummary as r}
@@ -212,7 +212,7 @@
                         aria-label={"Supprimer l'obligation vers " + L(id)}
                         title="Supprimer"
                         on:click={() => removeEdge(r.from, 'mandatory', id)}
-                      >Ã</button>
+                      >×</button>
                     </span>{#if i < r.mandatory.length-1}<span class="sep">, </span>{/if}
                   {/each}
                 {/if}
@@ -225,16 +225,16 @@
                 {:else}
                   {#each r.dependencies as dep, i}
                     {#if dep.type === 'group'}
-                      <span class="chip req group" title="Groupe de dÃ©pendances">{dep.label}</span>
+                      <span class="chip req group" title="Groupe de dépendances">{dep.label}</span>
                     {:else}
-                      <span class="chip req" title="DÃ©pendance">
+                      <span class="chip req" title="Dépendance">
                         {dep.label}
                         <button
                           class="chip-x"
-                          aria-label={"Supprimer la dÃ©pendance vers " + dep.label}
+                          aria-label={"Supprimer la dépendance vers " + dep.label}
                           title="Supprimer"
                           on:click={() => removeEdge(r.from, 'requires', dep.id)}
-                        >Ã</button>
+                        >×</button>
                       </span>
                     {/if}
                     {#if i < r.dependencies.length-1}<span class="sep">, </span>{/if}
@@ -253,15 +253,15 @@
                       {L(id)}
                       <button
                         class="chip-x"
-                        aria-label={"Supprimer l'incompatibilitÃ© avec " + L(id)}
+                        aria-label={"Supprimer l'incompatibilité avec " + L(id)}
                         title="Supprimer"
                         on:click={() => removeEdge(r.from, 'incompatible_with', id)}
-                      >Ã</button>
+                      >×</button>
                     </span>{#if i < r.incompatible_with.length-1}<span class="sep">, </span>{/if}
                   {/each}
                   {#if r.incompatibleGroups && r.incompatibleGroups.length}
                     {#each r.incompatibleGroups as group}
-                      <span class="chip inc group" title="Groupe d'incompatibilitÃ©s">{group.label}</span>
+                      <span class="chip inc group" title="Groupe d'incompatibilités">{group.label}</span>
                     {/each}
                   {/if}
                 {/if}

@@ -100,7 +100,7 @@ import {
   function handleToggleRgbMode() {
     const next = !$rgbMode;
     toggleRgbMode();
-    toastInfo(next ? 'Mode RGB active.' : 'Mode RGB desactive.');
+    toastInfo(next ? 'Mode RGB activé.' : 'Mode RGB désactivé.');
   }
 
   function chooseFile() {
@@ -135,7 +135,7 @@ import {
       return;
     }
     if (password.length < 6) {
-      toastError('Le mot de passe doit contenir au moins 6 caracteres.');
+      toastError('Le mot de passe doit contenir au moins 6 caractères.');
       return;
     }
     creatingUser = true;
@@ -144,7 +144,7 @@ import {
       toastSuccess(`Utilisateur "${username}" cree.`);
       resetCreateUserForm();
     } catch (err) {
-      toastError(err?.message || 'Creation utilisateur impossible.');
+      toastError(err?.message || 'Création utilisateur impossible.');
     } finally {
       creatingUser = false;
     }
@@ -171,7 +171,7 @@ import {
       openSystemHealthPanel();
       await refreshSystemHealth();
     } catch (err) {
-      toastError(err?.message || 'Impossible de recuperer la sante du systeme.');
+      toastError(err?.message || 'Impossible de récupérer la santé du système.');
     }
   }
 
@@ -185,9 +185,9 @@ import {
     }
     try {
       await importJSON(file);
-      toastSuccess('Import effectuÃ©.');
+      toastSuccess('Import effectué.');
     } catch (err) {
-      toastError(err?.message || 'Ãchec import.');
+      toastError(err?.message || 'Échec import.');
     }
   }
 
@@ -239,13 +239,13 @@ import {
         archived: $activeSchema?.archived
       });
       toastSuccess(
-        record?.status === 'created' ? 'SchÃ©ma enregistrÃ©.' : 'SchÃ©ma mis Ã  jour.'
+        record?.status === 'created' ? 'Schéma enregistré.' : 'Schéma mis à jour.'
       );
       schemaDirty = false;
       schemaName = record?.name || schemaName;
       await refreshList();
     } catch (err) {
-      toastError(err?.message || "Ãchec de l'enregistrement du schÃ©ma.");
+      toastError(err?.message || "Échec de l'enregistrement du schéma.");
     } finally {
       saving = false;
     }
@@ -256,7 +256,7 @@ import {
     try {
       await refreshSavedSchemas({ includeArchived: true });
     } catch (err) {
-      toastError(err?.message || 'Ãchec du chargement des schÃ©mas.');
+      toastError(err?.message || 'Échec du chargement des schémas.');
     } finally {
       listLoading = false;
     }
@@ -275,7 +275,7 @@ import {
         schemaDirty = false;
         schemaName = $activeSchema?.name || schemaName;
       } catch (err) {
-        toastError(err?.message || 'Ãchec du chargement du schÃ©ma.');
+        toastError(err?.message || 'Échec du chargement du schéma.');
       } finally {
         loadingSchema = false;
       }
@@ -299,19 +299,19 @@ import {
   async function handleDuplicate() {
     if (!canEdit) return;
     const base = schemaName || $activeSchema?.name || '';
-    const suggested = base ? `${base} (copie)` : 'Nouveau schema';
+    const suggested = base ? `${base} (copie)` : 'Nouveau schéma';
     if (typeof window === 'undefined') return;
     const input = window.prompt('Nom du duplicata', suggested);
     const trimmed = (input || '').trim();
     if (!trimmed) return;
     try {
       const record = await duplicateCurrentSchema(trimmed);
-      toastSuccess('SchÃ©ma dupliquÃ©.');
+      toastSuccess('Schéma dupliqué.');
       schemaDirty = false;
       schemaName = record?.name || trimmed;
       await refreshList();
     } catch (err) {
-      toastError(err?.message || 'Ãchec de la duplication.');
+      toastError(err?.message || 'Échec de la duplication.');
     }
   }
 
@@ -319,13 +319,13 @@ import {
     if (!$draftAvailable) return;
     if (typeof window !== 'undefined' && $editorDirty) {
       const confirmed = window.confirm(
-        'Restaurer le brouillon ecrasera les modifications en cours. Continuer ?'
+        'Restaurer le brouillon écrasera les modifications en cours. Continuer ?'
       );
       if (!confirmed) return;
     }
     const ok = restoreDraft();
     if (ok) {
-      toastSuccess('Brouillon restaurÃ©.');
+      toastSuccess('Brouillon restauré.');
     } else {
       toastError('Impossible de restaurer le brouillon local.');
     }
@@ -335,20 +335,20 @@ import {
     if (!canEdit || !$activeSchema?.id || deleting) return;
     if (typeof window !== 'undefined') {
       const confirmDelete = window.confirm(
-        `Supprimer definitivement le schema "${$activeSchema?.name || schemaName}" ?`
+        `Supprimer définitivement le schéma "${$activeSchema?.name || schemaName}" ?`
       );
       if (!confirmDelete) return;
     }
     deleting = true;
     try {
       await deleteSchemaFromDatabase($activeSchema.id);
-      toastSuccess('SchÃ©ma supprimÃ©.');
+      toastSuccess('Schéma supprimé.');
       schemaName = '';
       schemaDirty = false;
       selectedSchemaId = '';
       await refreshList();
     } catch (err) {
-      toastError(err?.message || 'Ãchec de la suppression.');
+      toastError(err?.message || "Échec de la suppression.");
     } finally {
       deleting = false;
     }
@@ -361,7 +361,7 @@ import {
     archivingActive = true;
     try {
       await archiveSchemaInDatabase(targetId, nextState);
-      toastSuccess(nextState ? 'SchNma archivN.' : 'SchNma restaure.');
+      toastSuccess(nextState ? 'Schéma archivé.' : 'Schéma restauré.');
       if (nextState) {
         selectedSchemaId = '';
       }
@@ -461,10 +461,10 @@ import {
   async function handleLogout() {
     try {
       await logoutUser();
-      toastInfo('DÃ©connectÃ©.');
+      toastInfo('Déconnecté.');
       await refreshList();
     } catch (err) {
-      toastError(err?.message || 'Erreur lors de la dÃ©connexion.');
+      toastError(err?.message || 'Erreur lors de la déconnexion.');
     } finally {
       showLogin = false;
       resetCreateUserForm();
@@ -645,7 +645,7 @@ import {
             />
           <div class="schema-actions primary-actions">
               <button class="btn btn-sm primary" type="button" on:click={handleSaveSchema} disabled={saving || !canEdit}>
-                {saving ? 'Enregistrement...' : $activeSchema?.id ? 'Mettre a jour' : 'Enregistrer'}
+                {saving ? 'Enregistrement...' : $activeSchema?.id ? 'Mettre à jour' : 'Enregistrer'}
               </button>
               <button class="btn btn-sm" type="button" on:click={handleDuplicate} disabled={!canEdit || saving}>
                 Dupliquer
@@ -772,7 +772,7 @@ import {
                 value="all"
                 disabled={$mode === 'configurateur'}
               >
-                {$mode === 'configurateur' ? 'Tous les groupes (editeur uniquement)' : 'Tous les groupes'}
+                {$mode === 'configurateur' ? 'Tous les groupes (éditeur uniquement)' : 'Tous les groupes'}
               </option>
               {#each groupOptions as group}
                 <option value={group}>{group}</option>
@@ -829,13 +829,13 @@ import {
             <span class="auth-loading">Authentification...</span>
           {:else if $authUser}
             <div class="account-row">
-              <span class="user-badge" title="Utilisateur connecte">{$authUser.username}</span>
-              <button class="btn btn-sm" type="button" on:click={handleLogout}>Se deconnecter</button>
+              <span class="user-badge" title="Utilisateur connecté">{$authUser.username}</span>
+              <button class="btn btn-sm" type="button" on:click={handleLogout}>Se déconnecter</button>
             </div>
             {#if isBootstrapUser}
               <div class="rgb-toggle">
                 <button class="btn btn-sm" type="button" on:click={handleToggleRgbMode}>
-                  {$rgbMode ? 'Desactiver le mode RGB' : 'Activer le mode RGB'}
+                  {$rgbMode ? 'Désactiver le mode RGB' : 'Activer le mode RGB'}
                 </button>
               </div>
             {/if}
@@ -850,7 +850,7 @@ import {
                   on:click={handleOpenSystemHealth}
                   disabled={$systemHealthLoading}
                 >
-                  {$systemHealthLoading ? 'Chargement...' : 'Sante systeme'}
+                  {$systemHealthLoading ? 'Chargement...' : 'Santé système'}
                 </button>
                 {#if showCreateUser}
                   <form class="user-create" on:submit|preventDefault={handleCreateUserSubmit}>
@@ -875,7 +875,7 @@ import {
                     />
                     <div class="user-create-actions">
                       <button class="btn btn-sm primary" type="submit" disabled={creatingUser}>
-                        {creatingUser ? 'Creation...' : 'Creer'}
+                        {creatingUser ? 'Création...' : 'Créer'}
                       </button>
                       <button
                         class="btn btn-sm"

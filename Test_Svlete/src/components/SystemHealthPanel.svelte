@@ -98,7 +98,7 @@
     try {
       await refreshSystemHealth();
     } catch (err) {
-      toastError(err?.message || 'Impossible de recuperer la sante du systeme.');
+      toastError(err?.message || 'Impossible de récupérer la santé du système.');
     }
   }
 
@@ -125,18 +125,18 @@
 {#if open}
   <div
     class="health-backdrop"
-    role="presentation"
+    role="présentation"
     on:click={(event) => event.target === event.currentTarget && handleClose()}
   >
-    <section class="health-panel" role="dialog" aria-modal="true" aria-label="Sante systeme">
+    <section class="health-panel" role="dialog" aria-modal="true" aria-label="Santé système">
       <header class="health-header">
         <div>
-          <h2>Sante du systeme</h2>
-          <p>Controle rapide de l etat du serveur qui heberge la base de schemas.</p>
+          <h2>Santé du système</h2>
+          <p>Contrôle rapide de l'état du serveur qui héberge la base de schémas.</p>
         </div>
         <div class="header-actions">
           <button class="btn btn-sm" type="button" on:click={handleRefresh} disabled={loading}>
-            {loading ? 'Actualisation...' : 'Rafraichir'}
+            {loading ? 'Actualisation...' : 'Rafraîchir'}
           </button>
           <button class="btn btn-sm" type="button" on:click={handleClose}>Fermer</button>
         </div>
