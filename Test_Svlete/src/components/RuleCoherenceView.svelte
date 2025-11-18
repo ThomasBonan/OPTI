@@ -42,7 +42,7 @@
 
   const dispatch = createEventDispatcher();
 
-  export let title = 'Vue cohérence';
+  export let title = 'Vue cohÃ©rence';
   let svgEl;
   let contentEl;
   let highlightedNodes = new Set();
@@ -56,9 +56,9 @@
   $: gammeWarningCount = graph.gammeWarnings.length;
   $: statusLabel = (() => {
     const chunks = [];
-    if (cycleCount > 0) chunks.push(`${cycleCount} boucle(s) détectée(s)`);
+    if (cycleCount > 0) chunks.push(`${cycleCount} boucle(s) dÃ©tectÃ©e(s)`);
     if (gammeWarningCount > 0) chunks.push(`${gammeWarningCount} conflit(s) de gamme`);
-    return chunks.length ? chunks.join(' - ') : 'Relations cohérentes';
+    return chunks.length ? chunks.join(' - ') : 'Relations cohÃ©rentes';
   })();
   $: statusTone = (cycleCount > 0 || gammeWarningCount > 0) ? 'nok' : 'ok';
 
@@ -96,6 +96,28 @@
     }
     if (current) lines.push(current);
     return lines;
+  }
+
+  function dependencyTargets(spec = {}) {
+    const set = new Set(Array.isArray(spec?.requires) ? spec.requires : []);
+    const groups = Array.isArray(spec?.requires_groups) ? spec.requires_groups : [];
+    for (const group of groups) {
+      if (!group) continue;
+      const of = Array.isArray(group.of) ? group.of : [];
+      of.forEach((id) => { if (id) set.add(id); });
+    }
+    return Array.from(set);
+  }
+
+  function incompatibilityTargets(spec = {}) {
+    const set = new Set(Array.isArray(spec?.incompatible_with) ? spec.incompatible_with : []);
+    const groups = Array.isArray(spec?.incompatible_groups) ? spec.incompatible_groups : [];
+    for (const group of groups) {
+      (Array.isArray(group?.of) ? group.of : []).forEach((id) => {
+        if (id) set.add(id);
+      });
+    }
+    return Array.from(set);
   }
 
   function computeNodeHeight(titleLines = 1, metaLines = 1) {
@@ -188,11 +210,11 @@
         nodesSet.add(id);
         edges.push({ from, to: id, type: 'mandatory' });
       }
-      for (const id of spec?.requires || []) {
+      for (const id of dependencyTargets(spec)) {
         nodesSet.add(id);
         edges.push({ from, to: id, type: 'requires' });
       }
-      for (const id of spec?.incompatible_with || []) {
+      for (const id of incompatibilityTargets(spec)) {
         nodesSet.add(id);
         edges.push({ from, to: id, type: 'incompatible_with' });
       }
@@ -237,7 +259,7 @@
       const meta = groupMeta.get(id);
       const metaText = meta
         ? `[${meta.group}${meta.subgroup ? ` / ${meta.subgroup}` : ''}]`
-        : '[Non classé]';
+        : '[Non classÃ©]';
       const titleLines = wrapLines(labels[id] || id, 18);
       const metaLines = wrapLines(metaText, 22);
       nodeLayout[id] = {
@@ -429,7 +451,7 @@
 
   {#if graph.gammeWarnings.length}
     <div class="warning-box">
-      <strong>Conflits de gamme détectés :</strong>
+      <strong>Conflits de gamme dÃ©tectÃ©s :</strong>
       <ul>
         {#each graph.gammeWarnings as warn}
           <li>{L(warn.from)} -> {L(warn.to)}</li>
@@ -439,13 +461,13 @@
   {/if}
 
   {#if graph.nodes.length === 0}
-    <div class="empty">Aucune règle à analyser.</div>
+    <div class="empty">Aucune rÃ¨gle Ã  analyser.</div>
   {:else}
     <div class="cv-canvas">
       <svg
         bind:this={svgEl}
         role="img"
-        aria-label="Visualisation de cohérence des règles"
+        aria-label="Visualisation de cohÃ©rence des rÃ¨gles"
         viewBox={`0 0 ${graph.width} ${graph.height}`}
         preserveAspectRatio="xMidYMid meet"
         on:click={clearHighlight}
@@ -487,7 +509,7 @@
               {@const layout = graph.nodeLayout?.[id]}
               {@const rectH = layout?.height ?? MIN_NODE_H}
               {@const titleLines = layout?.titleLines ?? wrapLines(L(id), 18)}
-              {@const metaLines = layout?.metaLines ?? ['[Non classé]']}
+              {@const metaLines = layout?.metaLines ?? ['[Non classÃ©]']}
               <g transform={`translate(${pos.x}, ${pos.y})`} class={`node ${graph.cycles.has(id) ? 'cycle' : ''} ${highlightedNodes.has(id) ? 'highlighted' : ''}`}>
                 <rect width={NODE_W} height={rectH} rx="14" ry="14" />
                 <text class="label-title" text-anchor="middle">

@@ -1,0 +1,11 @@
+﻿import puppeteer from "puppeteer";
+const browser = await puppeteer.launch({ headless: 'new' });
+const page = await browser.newPage();
+page.on('console', msg => console.log('console', msg.type(), msg.text()));
+await page.goto('http://localhost:3000', { waitUntil: 'networkidle2', timeout: 60000 });
+await new Promise(r=>setTimeout(r, 1000));
+await page.select('#schema-select', '1');
+await new Promise(r=>setTimeout(r, 2000));
+const info = await page.evaluate(() => ({ record: !!window.__lastRecord, hydrate: window.__lastHydrate || null, err: window.__lastHydrateError || null }));
+console.log(info);
+await browser.close();

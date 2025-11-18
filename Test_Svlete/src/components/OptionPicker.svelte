@@ -2,8 +2,8 @@
   import { onMount, onDestroy, createEventDispatcher } from 'svelte';
 
   export let items = [];      // [{ id, label, path? }]
-  export let value = null;    // id sélectionné (bind:value)
-  export let placeholder = 'Rechercher…';
+  export let value = null;    // id sÃ©lectionnÃ© (bind:value)
+  export let placeholder = 'Rechercher...';
   export let disabled = false;
   export let showPath = false;
 
@@ -33,12 +33,12 @@
   function closeMenu() { open = false; active = -1; }
 
   function select(id) {
-    value = id;                          // met à jour le bind:value côté parent
-    dispatch('change', { value: id });   // au cas où le parent écoute l'event
+    value = id;                          // met Ã  jour le bind:value cÃ´tÃ© parent
+    dispatch('change', { value: id });   // au cas oÃ¹ le parent Ã©coute l'event
     // reset du champ et fermeture du menu
     q = '';
     closeMenu();
-    // retire le focus pour éviter la réouverture immédiate
+    // retire le focus pour Ã©viter la rÃ©ouverture immÃ©diate
     setTimeout(() => inputEl?.blur(), 0);
   }
 
@@ -89,15 +89,15 @@
       spellcheck="false"
     />
     {#if value}
-      <button class="clear" title="Effacer" on:click={() => { value = null; dispatch('change', { value: null }); q=''; closeMenu(); inputEl?.focus(); }}>×</button>
+      <button class="clear" title="Effacer" on:click={() => { value = null; dispatch('change', { value: null }); q=''; closeMenu(); inputEl?.focus(); }}>Ã</button>
     {/if}
-    <span class="caret" aria-hidden>▾</span>
+    <span class="caret" aria-hidden>v</span>
   </div>
 
   {#if open}
     <div class="menu" bind:this={menuEl} role="listbox">
       {#if filtered.length === 0}
-        <div class="empty">Aucun résultat</div>
+        <div class="empty">Aucun rÃ©sultat</div>
       {:else}
         {#each filtered as it, i (it.id)}
           <div

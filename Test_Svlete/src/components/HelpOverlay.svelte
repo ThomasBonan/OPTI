@@ -142,9 +142,9 @@
           <section>
             <h3>Raccourcis</h3>
             <ul>
-              <li><kbd>Ctrl</kbd> ou <kbd>Cmd</kbd> + <kbd>S</kbd> — Enregistrer le schema.</li>
-              <li><kbd>Ctrl</kbd> ou <kbd>Cmd</kbd> + <kbd>F</kbd> — Ouvrir l aide et positionner la recherche.</li>
-              <li><kbd>Escape</kbd> — Fermer le menu ou le formulaire de connexion.</li>
+              <li><kbd>Ctrl</kbd> ou <kbd>Cmd</kbd> + <kbd>S</kbd> - Enregistrer le schema.</li>
+              <li><kbd>Ctrl</kbd> ou <kbd>Cmd</kbd> + <kbd>F</kbd> - Ouvrir l aide et positionner la recherche.</li>
+              <li><kbd>Escape</kbd> - Fermer le menu ou le formulaire de connexion.</li>
             </ul>
           </section>
           <section>
@@ -172,8 +172,8 @@
           <section>
             <h3>Raccourcis</h3>
             <ul>
-              <li><kbd>Ctrl</kbd> ou <kbd>Cmd</kbd> + <kbd>F</kbd> — Ouvrir l aide et lancer la recherche.</li>
-              <li><kbd>Escape</kbd> — Fermer le menu ou le formulaire de connexion.</li>
+              <li><kbd>Ctrl</kbd> ou <kbd>Cmd</kbd> + <kbd>F</kbd> - Ouvrir l aide et lancer la recherche.</li>
+              <li><kbd>Escape</kbd> - Fermer le menu ou le formulaire de connexion.</li>
             </ul>
           </section>
           <section>

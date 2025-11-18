@@ -15,7 +15,7 @@
     for (const [gName, gObj] of Object.entries(groupedMap || {})) {
       const sub = gObj?.subgroups || {};
       for (const [sgName, ids] of Object.entries(sub)) {
-        (ids || []).forEach(id => out.push({ id, label: labels?.[id] || id, path: `${gName} › ${sgName}` }));
+        (ids || []).forEach(id => out.push({ id, label: labels?.[id] || id, path: `${gName} > ${sgName}` }));
       }
       (gObj?.root || []).forEach(id => out.push({ id, label: labels?.[id] || id, path: `${gName}` }));
     }
@@ -29,19 +29,21 @@
   const L = (id) => get(optionLabels)?.[id] || id;
   const PATH = (id) => flat.find(o => o.id === id)?.path || '';
 
-  // ---------- ruleset actif (100% réactif) ----------
+  // ---------- ruleset actif (100% rÃ©actif) ----------
   $: activeRules = $rulesets?.[$currentRulesetName]?.rules || {};
   const getSpec    = (id) => activeRules?.[id] || {};
   const ensureSpec = (r, id) => (r[id] = r[id] || {}, r[id]);
 
-  // état local
+  // Ã©tat local
   let src = null;
   let pickMandatory = null;
   let pickIncomp = null;
-  let pickGroup = []; // index par groupe
+  let pickDependencyGroup = []; // index par groupe
+  let pickIncompatGroup = [];
 
-  // Liste des groupes k/n — dépend DIRECTEMENT des stores (fix)
-  $: knGroups = src ? ($rulesets?.[$currentRulesetName]?.rules?.[src]?.requires_groups || []) : [];
+  // Liste des groupes k/n - dÃ©pend DIRECTEMENT des stores (fix)
+  $: dependencyGroups = src ? ($rulesets?.[$currentRulesetName]?.rules?.[src]?.requires_groups || []) : [];
+  $: incompatGroups = src ? ($rulesets?.[$currentRulesetName]?.rules?.[src]?.incompatible_groups || []) : [];
 
   // --- mutation helper ---
   function updateRules(mutator) {
@@ -52,7 +54,7 @@
       const rulesNew = mutator({ ...rulesOld });
       return { ...rs0, [name]: { ...payload, rules: rulesNew } };
     });
-    // rien d’autre : on laisse $rulesets/$currentRulesetName déclencher les $: ci-dessus
+    // rien d'autre : on laisse $rulesets/$currentRulesetName dÃ©clencher les $: ci-dessus
   }
 
   // --- Ajouts auto ---
@@ -76,8 +78,8 @@
     pickIncomp = null;
   }
 
-  $: if (src && Array.isArray(pickGroup)) {
-    pickGroup.forEach((val, idx) => {
+  $: if (src && Array.isArray(pickDependencyGroup)) {
+    pickDependencyGroup.forEach((val, idx) => {
       if (!val) return;
       updateRules(r => {
         const S = ensureSpec(r, src);
@@ -90,9 +92,28 @@
         S.requires_groups = list; S.requires = undefined;
         r[src] = { ...S }; return r;
       });
-      // ⚠️ réassigner le tableau pour réveiller le bind:value du picker
-      pickGroup[idx] = null;
-      pickGroup = pickGroup.slice();
+      // [!] rÃ©assigner le tableau pour rÃ©veiller le bind:value du picker
+      pickDependencyGroup[idx] = null;
+      pickDependencyGroup = pickDependencyGroup.slice();
+    });
+  }
+
+  $: if (src && Array.isArray(pickIncompatGroup)) {
+    pickIncompatGroup.forEach((val, idx) => {
+      if (!val) return;
+      updateRules((r) => {
+        const S = ensureSpec(r, src);
+        const list = Array.isArray(S.incompatible_groups) ? S.incompatible_groups.slice() : [];
+        const g = { ...(list[idx] || { min: 2, of: [] }) };
+        g.of = Array.from(new Set([...(g.of || []), val]));
+        if (!Number.isFinite(+g.min)) g.min = Math.min(2, g.of.length);
+        g.min = Math.max(0, Math.min(g.min, g.of.length));
+        list[idx] = g;
+        S.incompatible_groups = list;
+        r[src] = { ...S }; return r;
+      });
+      pickIncompatGroup[idx] = null;
+      pickIncompatGroup = pickIncompatGroup.slice();
     });
   }
 
@@ -113,7 +134,7 @@
       r[src] = { ...S }; r[idB] = { ...B }; return r;
     });
   }
-  function addGroup() {
+  function addDependencyGroup() {
     if (!src) return;
     updateRules(r => {
       const S = ensureSpec(r, src);
@@ -122,10 +143,10 @@
       S.requires_groups = list; S.requires = undefined;
       r[src] = { ...S }; return r;
     });
-    // prépare un slot pour le nouveau picker
-    pickGroup = [...pickGroup, null];
+    // prÃ©pare un slot pour le nouveau picker
+    pickDependencyGroup = [...pickDependencyGroup, null];
   }
-  function removeGroup(idx) {
+  function removeDependencyGroup(idx) {
     updateRules(r => {
       const S = ensureSpec(r, src);
       const list = (S.requires_groups || []).slice();
@@ -133,9 +154,9 @@
       S.requires_groups = list;
       r[src] = { ...S }; return r;
     });
-    pickGroup = pickGroup.filter((_, i) => i !== idx);
+    pickDependencyGroup = pickDependencyGroup.filter((_, i) => i !== idx);
   }
-  function setGroupMin(idx, v) {
+  function setDependencyGroupMin(idx, v) {
     updateRules(r => {
       const S = ensureSpec(r, src);
       const list = (S.requires_groups || []).slice();
@@ -147,7 +168,7 @@
       r[src] = { ...S }; return r;
     });
   }
-  function removeFromGroup(idx, idB) {
+  function removeFromDependencyGroup(idx, idB) {
     updateRules(r => {
       const S = ensureSpec(r, src);
       const list = (S.requires_groups || []).slice();
@@ -159,6 +180,51 @@
       r[src] = { ...S }; return r;
     });
   }
+  function addIncompatGroup() {
+    if (!src) return;
+    updateRules((r) => {
+      const S = ensureSpec(r, src);
+      const list = Array.isArray(S.incompatible_groups) ? S.incompatible_groups.slice() : [];
+      list.push({ min: 2, of: [] });
+      S.incompatible_groups = list;
+      r[src] = { ...S }; return r;
+    });
+    pickIncompatGroup = [...pickIncompatGroup, null];
+  }
+  function removeIncompatGroup(idx) {
+    updateRules((r) => {
+      const S = ensureSpec(r, src);
+      const list = (S.incompatible_groups || []).slice();
+      list.splice(idx, 1);
+      S.incompatible_groups = list;
+      r[src] = { ...S }; return r;
+    });
+    pickIncompatGroup = pickIncompatGroup.filter((_, i) => i !== idx);
+  }
+  function setIncompatGroupMin(idx, v) {
+    updateRules((r) => {
+      const S = ensureSpec(r, src);
+      const list = (S.incompatible_groups || []).slice();
+      const g = { ...(list[idx] || { min: 2, of: [] }) };
+      const max = (g.of || []).length;
+      g.min = Math.max(0, Math.min(Number.isFinite(+v) ? +v : 0, max));
+      list[idx] = g;
+      S.incompatible_groups = list;
+      r[src] = { ...S }; return r;
+    });
+  }
+  function removeFromIncompatGroup(idx, idB) {
+    updateRules((r) => {
+      const S = ensureSpec(r, src);
+      const list = (S.incompatible_groups || []).slice();
+      const g = { ...(list[idx] || { min: 2, of: [] }) };
+      g.of = (g.of || []).filter((x) => x !== idB);
+      g.min = Math.max(0, Math.min(g.min ?? 2, g.of.length));
+      list[idx] = g;
+      S.incompatible_groups = list;
+      r[src] = { ...S }; return r;
+    });
+  }
 
   onDestroy(() => { stopG(); stopL(); });
 </script>
@@ -166,32 +232,34 @@
 <div class="rule-editor">
   <!-- Source -->
   <div class="section">
-    <div class="label">Option source</div>
+    <div class="label">NÅud Ã  modifier</div>
     <div class="row">
-      <OptionPicker items={flat} bind:value={src} placeholder="Rechercher / choisir l’option source…" showPath />
+      <OptionPicker items={flat} bind:value={src} placeholder="Rechercher / choisir le nÅud Ã  modifier..." showPath />
       {#if src}
-        <button class="btn" type="button" on:click={() => { src = null; }} title="Effacer">×</button>
+        <button class="btn" type="button" on:click={() => { src = null; }} title="Effacer">Ã</button>
       {/if}
     </div>
     {#if src}
       <div class="picked">
-        <div class="picked-title">Sélectionné :</div>
+        <div class="picked-title">SÃ©lectionnÃ© :</div>
         <div class="picked-name">{L(src)}</div>
         <div class="picked-path">{PATH(src)}</div>
       </div>
     {/if}
   </div>
 
+
+
   {#if src}
     <!-- Obligatoire -->
     <div class="section">
       <div class="label">Obligatoire</div>
-      <div class="hint">Si <strong>{L(src)}</strong> est choisie, les options ci-dessous sont auto-sélectionnées.</div>
+      <div class="hint">Si <strong>{L(src)}</strong> est choisie, les options ci-dessous sont auto-sÃ©lectionnÃ©es.</div>
 
       <OptionPicker
         items={flat.filter(o => o.id !== src && !(getSpec(src).mandatory || []).includes(o.id))}
         bind:value={pickMandatory}
-        placeholder="Rechercher et ajouter…"
+        placeholder="Rechercher et ajouter..."
         showPath
       />
 
@@ -202,7 +270,7 @@
           {#each (getSpec(src).mandatory || []) as id}
             <span class="chip">
               {L(id)} <small class="path">{PATH(id)}</small>
-              <button class="x" type="button" on:click|stopPropagation={() => removeMandatory(id)} title="Retirer">×</button>
+              <button class="x" type="button" on:click|stopPropagation={() => removeMandatory(id)} title="Retirer">Ã</button>
             </span>
           {/each}
         </div>
@@ -211,23 +279,23 @@
 
     <!-- Groupes k-sur-n -->
     <div class="section">
-      <div class="label">Groupes de dépendances (k-sur-n)</div>
-      <div class="hint">Chaque groupe définit un minimum <code>k</code> d’options à respecter. <strong>Tous</strong> les groupes doivent être satisfaits.</div>
+      <div class="label">Groupes de dÃ©pendances (k-sur-n)</div>
+      <div class="hint">Chaque groupe dÃ©finit un minimum <code>k</code> d'options Ã  respecter. <strong>Tous</strong> les groupes doivent Ãªtre satisfaits.</div>
 
-      <button class="btn primary" type="button" on:click={addGroup}>+ Ajouter un groupe</button>
+      <button class="btn primary" type="button" on:click={addDependencyGroup}>+ Ajouter un groupe</button>
 
-      {#each knGroups as g, i (i + '-' + (g.of?.length || 0))} <!-- key => force refresh quand la liste change -->
+      {#each dependencyGroups as g, i (i + '-' + (g.of?.length || 0))}
         <div class="group">
           <div class="group-head">
             <label>min</label>
-            <input type="number" min="0" max={g.of?.length || 0} value={g.min} on:change={(e) => setGroupMin(i, e.currentTarget.value)} />
-            <button class="btn" type="button" on:click={() => removeGroup(i)} title="Supprimer le groupe">🗑</button>
+            <input type="number" min="0" max={g.of?.length || 0} value={g.min} on:change={(e) => setDependencyGroupMin(i, e.currentTarget.value)} />
+            <button class="btn" type="button" on:click={() => removeDependencyGroup(i)} title="Supprimer le groupe">ð</button>
           </div>
 
           <OptionPicker
-            items={flat.filter(o => o.id !== src && !((knGroups[i]?.of || []).includes(o.id)))}
-            bind:value={pickGroup[i]}
-            placeholder="Rechercher et ajouter au groupe…"
+            items={flat.filter(o => o.id !== src && !((dependencyGroups[i]?.of || []).includes(o.id)))}
+            bind:value={pickDependencyGroup[i]}
+            placeholder="Rechercher et ajouter au groupe..."
             showPath
           />
 
@@ -238,7 +306,45 @@
               {#each (g.of || []) as id}
                 <span class="chip">
                   {L(id)} <small class="path">{PATH(id)}</small>
-                  <button class="x" type="button" on:click|stopPropagation={() => removeFromGroup(i, id)} title="Retirer">×</button>
+                  <button class="x" type="button" on:click|stopPropagation={() => removeFromDependencyGroup(i, id)} title="Retirer">Ã</button>
+                </span>
+              {/each}
+            </div>
+          {/if}
+        </div>
+      {/each}
+    </div>
+
+    <!-- Groupes d'incompatibilitÃ©s -->
+    <div class="section">
+      <div class="label">Groupes d'incompatibilitÃ©s (k-sur-n)</div>
+      <div class="hint">Si <strong>{L(src)}</strong> est prÃ©sentÃ© en mÃªme temps qu'au moins <code>k</code> options d'un groupe, il devient indisponible.</div>
+
+      <button class="btn primary" type="button" on:click={addIncompatGroup}>+ Ajouter un groupe</button>
+
+      {#each incompatGroups as g, i (i + '-inc-' + (g.of?.length || 0))}
+        <div class="group">
+          <div class="group-head">
+            <label>min</label>
+            <input type="number" min="0" max={g.of?.length || 0} value={g.min} on:change={(e) => setIncompatGroupMin(i, e.currentTarget.value)} />
+            <button class="btn" type="button" on:click={() => removeIncompatGroup(i)} title="Supprimer le groupe">ð</button>
+          </div>
+
+          <OptionPicker
+            items={flat.filter(o => o.id !== src && !((incompatGroups[i]?.of || []).includes(o.id)))}
+            bind:value={pickIncompatGroup[i]}
+            placeholder="Rechercher et ajouter au groupe..."
+            showPath
+          />
+
+          {#if (g.of || []).length === 0}
+            <div class="muted">Aucune option dans ce groupe.</div>
+          {:else}
+            <div class="chips">
+              {#each (g.of || []) as id}
+                <span class="chip">
+                  {L(id)} <small class="path">{PATH(id)}</small>
+                  <button class="x" type="button" on:click|stopPropagation={() => removeFromIncompatGroup(i, id)} title="Retirer">Ã</button>
                 </span>
               {/each}
             </div>
@@ -254,23 +360,24 @@
       <OptionPicker
         items={flat.filter(o => o.id !== src && !(getSpec(src).incompatible_with || []).includes(o.id))}
         bind:value={pickIncomp}
-        placeholder="Rechercher et ajouter une incompatibilité…"
+        placeholder="Rechercher et ajouter une incompatibilitÃ©..."
         showPath
       />
 
       {#if (getSpec(src).incompatible_with || []).length === 0}
-        <div class="muted">Aucune incompatibilité.</div>
+        <div class="muted">Aucune incompatibilitÃ©.</div>
       {:else}
         <div class="chips">
           {#each (getSpec(src).incompatible_with || []) as id}
             <span class="chip danger">
               {L(id)} <small class="path">{PATH(id)}</small>
-              <button class="x" type="button" on:click|stopPropagation={() => removeIncompatible(id)} title="Retirer">×</button>
+              <button class="x" type="button" on:click|stopPropagation={() => removeIncompatible(id)} title="Retirer">Ã</button>
             </span>
           {/each}
         </div>
       {/if}
     </div>
+
   {/if}
 </div>
 

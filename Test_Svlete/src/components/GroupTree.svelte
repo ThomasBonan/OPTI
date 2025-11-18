@@ -4,7 +4,7 @@
   export let selectedGroup = '';
   export let selectedSubgroup = '__root';
 
-  /* ========= ÉDITION INLINE ========= */
+  /* ========= ÃDITION INLINE ========= */
   let editing = { kind: null, group: '', subgroup: '', id: '', value: '' };
   let editInput;
 
@@ -32,7 +32,7 @@
   }
   function deleteOption(g, id) {
     const label = $optionLabels[id] || id;
-    if (!confirm(`Supprimer l’option « ${label} » ?`)) return;
+    if (!confirm(`Supprimer l'option Â« ${label} Â» ?`)) return;
 
     deleteOptionEverywhere(g, id);
     data.update(d => { const arr = (d[g] || []).filter(o => o.id !== id); return { ...d, [g]: arr }; });
@@ -58,7 +58,7 @@
     });
   }
   function deleteSubgroup(g, sg) {
-    if (!confirm(`Supprimer le sous-groupe « ${sg} » ? (les options restent dans le groupe)`)) return;
+    if (!confirm(`Supprimer le sous-groupe Â« ${sg} Â» ? (les options restent dans le groupe)`)) return;
     grouped.update(cur => {
       const next = { ...cur };
       const target = next[g]; if (!target) return cur;
@@ -70,7 +70,7 @@
     if (selectedGroup === g && selectedSubgroup === sg) selectedSubgroup = '__root';
   }
   function deleteGroup(g) {
-    if (!confirm(`Supprimer le groupe « ${g} » et toutes ses options ?`)) return;
+    if (!confirm(`Supprimer le groupe Â« ${g} Â» et toutes ses options ?`)) return;
     const ids = new Set(($data[g] || []).map(o => o.id));
 
     grouped.update(cur => { const { [g]:_, ...rest } = cur; return rest; });
@@ -119,7 +119,7 @@
     if (editing.kind === 'group') {
       const oldG = editing.group, newG = val;
       if (oldG === newG) return cancelEdit();
-      if ($grouped[newG]) { alert('Un groupe avec ce nom existe déjà.'); return; }
+      if ($grouped[newG]) { alert('Un groupe avec ce nom existe dÃ©jÃ .'); return; }
 
       grouped.update(cur => {
         const obj = cur[oldG]; if (!obj) return cur;
@@ -136,7 +136,7 @@
     if (editing.kind === 'subgroup') {
       const g = editing.group, oldSg = editing.subgroup, newSg = val;
       if (oldSg === newSg) return cancelEdit();
-      if ($grouped[g]?.subgroups?.[newSg]) { alert('Sous-groupe déjà existant dans ce groupe.'); return; }
+      if ($grouped[g]?.subgroups?.[newSg]) { alert('Sous-groupe dÃ©jÃ  existant dans ce groupe.'); return; }
 
       grouped.update(cur => {
         const target = cur[g]; if (!target) return cur;
@@ -188,7 +188,7 @@
     if (snap) { grouped.set(snap.grouped); data.set(snap.data); }
   }
 
-  // ===== Helpers data pour déplacer une option entre groupes =====
+  // ===== Helpers data pour dÃ©placer une option entre groupes =====
   function moveOptionData(srcGroup, dstGroup, id) {
     data.update(D => {
       const next = structuredClone(D || {});
@@ -200,13 +200,13 @@
       next[srcGroup] = fromArr;
 
       const toArr = next[dstGroup] || [];
-      // retire si déjà présent pour éviter doublon, puis ajoute en fin
+      // retire si dÃ©jÃ  prÃ©sent pour Ã©viter doublon, puis ajoute en fin
       next[dstGroup] = [...toArr.filter(o => o.id !== id), obj];
       return next;
     });
   }
 
-  // ===== Déplacement d’une option dans grouped (toutes combinaisons) =====
+  // ===== DÃ©placement d'une option dans grouped (toutes combinaisons) =====
   function performMoveOption(src, dst) {
     grouped.update(cur => {
       const next = structuredClone(cur);
@@ -227,7 +227,7 @@
       // destination
       const dstArr = getArr(dst.group, dst.key, true);
       let idx = (typeof dst.index === 'number') ? dst.index : dstArr.length;
-      // si même liste, corriger l’offset
+      // si mÃªme liste, corriger l'offset
       if (src.group === dst.group && src.key === dst.key && fromIdx < idx) idx--;
       if (idx < 0) idx = 0;
       if (idx > dstArr.length) idx = dstArr.length;
@@ -238,11 +238,11 @@
       return next;
     });
 
-    // si changement de groupe → maintenir `data`
+    // si changement de groupe -> maintenir `data`
     if (src.group !== dst.group) moveOptionData(src.group, dst.group, src.id);
   }
 
-  // ===== Déplacement de sous-groupe =====
+  // ===== DÃ©placement de sous-groupe =====
   function moveSubgroupToGroup(srcGroup, sg, dstGroup) {
     grouped.update(cur => {
       const next = structuredClone(cur);
@@ -264,14 +264,14 @@
       return next;
     });
 
-    // pas besoin de toucher `data` : les options restent dans leurs groupes d’arrivée (dstGroup)
-    // MAIS si changement de groupe, les options étaient auparavant "dans srcGroup" → pour être cohérent à l'export,
-    // on bascule aussi leurs entrées data vers dstGroup
+    // pas besoin de toucher `data` : les options restent dans leurs groupes d'arrivÃ©e (dstGroup)
+    // MAIS si changement de groupe, les options Ã©taient auparavant "dans srcGroup" -> pour Ãªtre cohÃ©rent Ã  l'export,
+    // on bascule aussi leurs entrÃ©es data vers dstGroup
     data.update(D => {
       const next = structuredClone(D || {});
       next[dstGroup] ||= [];
-      const movedIds = ($grouped?.[dstGroup]?.subgroups?.[sg] || []); // sera mis à jour au prochain tick, on re-sécurise ci-dessous
-      // on reconstruit `movedIds` depuis grouped courant après update
+      const movedIds = ($grouped?.[dstGroup]?.subgroups?.[sg] || []); // sera mis Ã  jour au prochain tick, on re-sÃ©curise ci-dessous
+      // on reconstruit `movedIds` depuis grouped courant aprÃ¨s update
       return next;
     });
   }
@@ -283,7 +283,7 @@
       next[dstGroup] ||= { root: [], subgroups: {} };
       const arrTo = next[dstGroup].subgroups?.[sgTo] || [];
       next[dstGroup].subgroups[sgTo] = Array.from(new Set([...arrTo, ...arrFrom]));
-      // supprimer l’ancien sous-groupe
+      // supprimer l'ancien sous-groupe
       if (next[srcGroup]?.subgroups) delete next[srcGroup].subgroups[sgFrom];
       return next;
     });
@@ -329,14 +329,14 @@
       performMoveOption(dragging, { group:g, key:'__root', index:null });
     } else if (dragging.kind === 'subgroup') {
       if (dragging.group === g) { hovering=null; return; }
-      // déplacer le sous-groupe tel quel vers l’autre groupe
+      // dÃ©placer le sous-groupe tel quel vers l'autre groupe
       moveSubgroupToGroup(dragging.group, dragging.subgroup, g);
-      // Déplacer aussi les entrées `data` des options concernées vers le dstGroup
+      // DÃ©placer aussi les entrÃ©es `data` des options concernÃ©es vers le dstGroup
       data.update(D => {
         const next = structuredClone(D || {});
         next[g] ||= [];
         const ids = ($grouped?.[dragging.group]?.subgroups?.[dragging.subgroup]) || [];
-        // Remap basé sur l'état AVANT suppression — on préfère rebalayer grouped après microtask, mais on simplifie:
+        // Remap basÃ© sur l'Ã©tat AVANT suppression - on prÃ©fÃ¨re rebalayer grouped aprÃ¨s microtask, mais on simplifie:
         return next;
       });
     }
@@ -362,7 +362,7 @@
     } else if (dragging.kind === 'subgroup') {
       // fusion sous-groupe -> sous-groupe
       if (dragging.group === g && dragging.subgroup === sg) { hovering=null; dragging=null; return; }
-      const msg = `Fusionner le sous-groupe « ${dragging.subgroup} » dans « ${sg} » ? (les options seront réunies, puis « ${dragging.subgroup} » sera supprimé)`;
+      const msg = `Fusionner le sous-groupe Â« ${dragging.subgroup} Â» dans Â« ${sg} Â» ? (les options seront rÃ©unies, puis Â« ${dragging.subgroup} Â» sera supprimÃ©)`;
       if (confirm(msg)) {
         mergeSubgroupIntoSubgroup(dragging.group, dragging.subgroup, g, sg);
       }
@@ -387,7 +387,7 @@
     if (dragging.kind === 'option') {
       performMoveOption(dragging, { group:g, key, index:null });
     } else if (dragging.kind === 'subgroup') {
-      // déplacer tout le SG dans ce groupe (même nom), avec fusion si conflit
+      // dÃ©placer tout le SG dans ce groupe (mÃªme nom), avec fusion si conflit
       moveSubgroupToGroup(dragging.group, dragging.subgroup, g);
     }
     hovering = null; dragging = null;
@@ -412,8 +412,8 @@
       const before = e.offsetY < e.currentTarget.offsetHeight / 2;
       performMoveOption(dragging, { group:g, key, index: before ? index : index + 1 });
     } else if (dragging.kind === 'subgroup') {
-      // fusion sur un item -> équivalent à déposer sur l'entête du SG
-      const msg = `Fusionner le sous-groupe « ${dragging.subgroup} » dans « ${key} » ?`;
+      // fusion sur un item -> Ã©quivalent Ã  dÃ©poser sur l'entÃªte du SG
+      const msg = `Fusionner le sous-groupe Â« ${dragging.subgroup} Â» dans Â« ${key} Â» ?`;
       if (confirm(msg)) mergeSubgroupIntoSubgroup(dragging.group, dragging.subgroup, g, key);
     }
     hovering = null; dragging = null;
@@ -422,9 +422,9 @@
 
 <div class="tree">
   <div class="toolbar">
-    <button class="btn" on:click={undoMove} disabled={undoStack.length === 0} title="Annuler le dernier déplacement">↶ Annuler</button>
+    <button class="btn" on:click={undoMove} disabled={undoStack.length === 0} title="Annuler le dernier dÃ©placement">&lt;- Annuler</button>
     {#if $mode !== 'editor'}
-      <span class="muted">Le glisser-déposer est disponible en mode Éditeur.</span>
+      <span class="muted">Le glisser-dÃ©poser est disponible en mode Ãditeur.</span>
     {/if}
   </div>
 
@@ -435,9 +435,9 @@
 
       <div class="row">
         <button class="twisty" on:click={() => setCollapsed(g, '__group', !($collapsed[g]?.__group))}>
-          {#if $collapsed[g]?.__group}▸{:else}▾{/if}
+          {#if $collapsed[g]?.__group}>{:else}v{/if}
         </button>
-        <span class="icon folder">📁</span>
+        <span class="icon folder">[folder]</span>
 
         {#if editing.kind === 'group' && editing.group === g}
           <input bind:this={editInput} bind:value={editing.value} class="edit"
@@ -449,7 +449,7 @@
                   class:selected={selectedGroup === g && selectedSubgroup === '__root'}>{g}</button>
         {/if}
 
-        <button class="btn-icon danger" title="Supprimer le groupe" on:click={() => deleteGroup(g)}>✕</button>
+        <button class="btn-icon danger" title="Supprimer le groupe" on:click={() => deleteGroup(g)}>x</button>
       </div>
 
       {#if !$collapsed[g]?.__group}
@@ -464,8 +464,8 @@
                  on:dragend={onDragEnd}
                  on:dragover={(e)=>onDragOverItem(e,g,'__root',i)}
                  on:drop={(e)=>onDropItem(e,g,'__root',i)}>
-              <span class="handle" title="Glisser pour déplacer">⋮⋮</span>
-              <span class="icon">📄</span>
+              <span class="handle" title="Glisser pour dÃ©placer">......</span>
+              <span class="icon">[doc]</span>
 
               {#if editing.kind === 'option' && editing.id === id}
                 <input bind:this={editInput} bind:value={editing.value} class="edit"
@@ -474,7 +474,7 @@
                 <span class="label" on:dblclick={() => startEditOption(g, id)}>{ $optionLabels[id] || id }</span>
               {/if}
 
-              <button class="btn-icon danger" title="Supprimer l’option" on:click={() => deleteOption(g, id)}>✕</button>
+              <button class="btn-icon danger" title="Supprimer l'option" on:click={() => deleteOption(g, id)}>x</button>
             </div>
           {/each}
         </div>
@@ -490,9 +490,9 @@
                  on:drop={(e)=>onDropOnSubgroupHeader(e,g,sg)}>
 
               <button class="twisty" on:click={() => setCollapsed(g, sg, !($collapsed[g]?.[sg]))}>
-                {#if $collapsed[g]?.[sg]}▸{:else}▾{/if}
+                {#if $collapsed[g]?.[sg]}>{:else}v{/if}
               </button>
-              <span class="icon">📂</span>
+              <span class="icon">[folder]</span>
 
               {#if editing.kind === 'subgroup' && editing.group === g && editing.subgroup === sg}
                 <input bind:this={editInput} bind:value={editing.value} class="edit"
@@ -504,7 +504,7 @@
                         class:selected={selectedGroup === g && selectedSubgroup === sg}>{sg}</button>
               {/if}
 
-              <button class="btn-icon danger" title="Supprimer ce sous-groupe" on:click={() => deleteSubgroup(g, sg)}>✕</button>
+              <button class="btn-icon danger" title="Supprimer ce sous-groupe" on:click={() => deleteSubgroup(g, sg)}>x</button>
             </div>
 
             {#if !($collapsed[g]?.[sg])}
@@ -518,8 +518,8 @@
                        on:dragend={onDragEnd}
                        on:dragover={(e)=>onDragOverItem(e,g,sg,i)}
                        on:drop={(e)=>onDropItem(e,g,sg,i)}>
-                    <span class="handle" title="Glisser pour déplacer">⋮⋮</span>
-                    <span class="icon">📄</span>
+                    <span class="handle" title="Glisser pour dÃ©placer">......</span>
+                    <span class="icon">[doc]</span>
 
                     {#if editing.kind === 'option' && editing.id === id}
                       <input bind:this={editInput} bind:value={editing.value} class="edit"
@@ -528,7 +528,7 @@
                       <span class="label" on:dblclick={() => startEditOption(g, id)}>{ $optionLabels[id] || id }</span>
                     {/if}
 
-                    <button class="btn-icon danger" title="Supprimer l’option" on:click={() => deleteOption(g, id)}>✕</button>
+                    <button class="btn-icon danger" title="Supprimer l'option" on:click={() => deleteOption(g, id)}>x</button>
                   </div>
                 {/each}
               </div>

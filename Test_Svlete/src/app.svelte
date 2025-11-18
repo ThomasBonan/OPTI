@@ -21,11 +21,11 @@
   import ExportBar from './components/ExportBar.svelte'; // export SVG/PNG/PDF
   import GroupSelectorBar from './components/GroupSelectorBar.svelte';
 
-  /* Vue éditeur (lazy-load) */
+  /* Vue Ã©diteur (lazy-load) */
   let EditorLayoutComponent = null;
   let editorLoading = false;
 
-  const pageTitle = 'Vue Éditeur';
+  const pageTitle = 'Vue Ãditeur';
 
   const MIN_SUMMARY_WIDTH = 260;
   const MAX_SUMMARY_WIDTH = 520;
@@ -68,7 +68,7 @@
     window.removeEventListener('pointerup', onResizePointerUp);
   }
 
-  // Applique le thème via data-theme sur <html>
+  // Applique le thÃ¨me via data-theme sur <html>
   let unsubTheme;
   onMount(() => {
     document.documentElement.setAttribute('data-theme', $theme || 'light');
@@ -78,7 +78,7 @@
     return () => unsubTheme && unsubTheme();
   });
 
-  // Charge dynamique du layout éditeur quand on passe en mode 'editor'
+  // Charge dynamique du layout Ã©diteur quand on passe en mode 'editor'
   $: if ($mode === 'editor' && !EditorLayoutComponent && !editorLoading) {
     editorLoading = true;
     import('./components/EditorLayout.svelte')
@@ -87,7 +87,7 @@
   }
 </script>
 
-<!-- Topbar : Import/Export JSON + switch configurateur/Éditeur + thème -->
+<!-- Topbar : Import/Export JSON + switch configurateur/Ãditeur + thÃ¨me -->
 <TopBar />
 <ToastContainer />
 <HelpOverlay />
@@ -102,7 +102,7 @@
   {#if EditorLayoutComponent}
     <svelte:component this={EditorLayoutComponent} />
   {:else}
-    <div class="loading"><div class="spinner" /> Chargement de l’éditeur…</div>
+    <div class="loading"><div class="spinner" /> Chargement de l'Ã©diteur...</div>
   {/if}
 {:else}
   <!-- === VUE configurateur === -->
@@ -123,7 +123,7 @@
         <div
           class="split-handle"
           role="separator"
-          aria-label="Redimensionner le résumé"
+          aria-label="Redimensionner le rÃ©sumÃ©"
           aria-orientation="vertical"
           tabindex="-1"
           on:pointerdown={onResizePointerDown}
@@ -157,7 +157,7 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* ====== Mise en page configurateur avec Résumé à droite ====== */
+  /* ====== Mise en page configurateur avec RÃ©sumÃ© Ã  droite ====== */
   .mainpane { display: flex; flex-direction: column; min-height: 0; }
   .rowtools {
     display: flex;

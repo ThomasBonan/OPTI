@@ -1,9 +1,9 @@
 <!--
   SystemHealthPanel.svelte
   ----------------------------------------------------------------------------
-  Overlay réservé au compte bootstrap pour visualiser l'état de santé du
-  serveur (base SQLite, stockage, charge CPU, mémoire). Interroge l'API
-  /api/admin/system-health et affiche les métriques sous forme lisible.
+  Overlay rÃ©servÃ© au compte bootstrap pour visualiser l'Ã©tat de santÃ© du
+  serveur (base SQLite, stockage, charge CPU, mÃ©moire). Interroge l'API
+  /api/admin/system-health et affiche les mÃ©triques sous forme lisible.
 -->
 <script>
   import { onMount } from 'svelte';
@@ -37,7 +37,7 @@
   $: serverProcessingMs = health?.serverProcessingMs ?? null;
 
   function formatBytes(value) {
-    if (value == null) return '—';
+    if (value == null) return '-';
     const units = ['o', 'Ko', 'Mo', 'Go', 'To', 'Po'];
     let size = Number(value);
     let unit = 0;
@@ -50,12 +50,12 @@
   }
 
   function formatNumber(value, options = {}) {
-    if (value == null || Number.isNaN(Number(value))) return '—';
+    if (value == null || Number.isNaN(Number(value))) return '-';
     return Number(value).toLocaleString('fr-FR', options);
   }
 
   function formatDuration(seconds) {
-    if (!seconds && seconds !== 0) return '—';
+    if (!seconds && seconds !== 0) return '-';
     const total = Math.max(0, Math.floor(seconds));
     const days = Math.floor(total / 86400);
     const hours = Math.floor((total % 86400) / 3600);
@@ -75,14 +75,14 @@
   }
 
   function formatLatency(ms) {
-    if (ms == null) return '—';
+    if (ms == null) return '-';
     const value = Number(ms);
     const digits = value >= 100 ? 0 : value >= 10 ? 1 : 2;
     return `${value.toFixed(digits)} ms`;
   }
 
   function formatLoad(loadArray) {
-    if (!Array.isArray(loadArray) || !loadArray.length) return '—';
+    if (!Array.isArray(loadArray) || !loadArray.length) return '-';
     return loadArray
       .slice(0, 3)
       .map((val) => Number(val || 0).toFixed(2))
@@ -149,7 +149,7 @@
         </div>
         <div class="metric">
           <span class="metric-label">Traitement serveur</span>
-          <span class="metric-value">{serverProcessingMs != null ? formatLatency(serverProcessingMs) : '—'}</span>
+          <span class="metric-value">{serverProcessingMs != null ? formatLatency(serverProcessingMs) : '-'}</span>
         </div>
         <div class="metric">
           <span class="metric-label">Temps de fonctionnement</span>
@@ -158,7 +158,7 @@
         <div class="metric">
           <span class="metric-label">Derniere mise a jour</span>
           <span class="metric-value">
-            {lastUpdated ? new Date(lastUpdated).toLocaleString('fr-FR') : '—'}
+            {lastUpdated ? new Date(lastUpdated).toLocaleString('fr-FR') : '-'}
           </span>
         </div>
       </section>
@@ -174,7 +174,7 @@
           <section>
             <h3>Base de donnees</h3>
             <ul>
-              <li><span>Chemin</span><span class="mono">{db?.path || '—'}</span></li>
+              <li><span>Chemin</span><span class="mono">{db?.path || '-'}</span></li>
               <li><span>Taille fichier</span><span>{formatBytes(db?.sizeBytes)}</span></li>
               <li><span>Taille estimee (pages)</span><span>{formatBytes(db?.approxSizeBytes)}</span></li>
               <li>
@@ -183,7 +183,7 @@
               </li>
               <li>
                 <span>Modifie le</span>
-                <span>{db?.modifiedAt ? new Date(db.modifiedAt).toLocaleString('fr-FR') : '—'}</span>
+                <span>{db?.modifiedAt ? new Date(db.modifiedAt).toLocaleString('fr-FR') : '-'}</span>
               </li>
             </ul>
           </section>
@@ -191,7 +191,7 @@
           <section>
             <h3>Stockage data/</h3>
             <ul>
-              <li><span>Dossier</span><span class="mono">{storage?.dataDir || '—'}</span></li>
+              <li><span>Dossier</span><span class="mono">{storage?.dataDir || '-'}</span></li>
               <li><span>Volume utilise</span><span>{formatBytes(storage?.contentBytes)}</span></li>
               <li><span>Fichiers</span><span>{formatNumber(storage?.files)}</span></li>
               <li><span>Dossiers</span><span>{formatNumber(storage?.directories)}</span></li>
@@ -202,7 +202,7 @@
                     {formatBytes(storage.usedBytes)} / {formatBytes(storage.totalBytes)}
                     ({formatNumber(percent(storage.usedBytes, storage.totalBytes), { maximumFractionDigits: 1 })} %)
                   {:else}
-                    —
+                    -
                   {/if}
                 </span>
               </li>
@@ -216,9 +216,9 @@
           <section>
             <h3>Processus Node</h3>
             <ul>
-              <li><span>PID</span><span>{proc?.pid ?? '—'}</span></li>
-              <li><span>Node</span><span>{proc?.nodeVersion ?? '—'}</span></li>
-              <li><span>Plateforme</span><span>{proc?.platform ?? '—'} ({proc?.arch ?? '—'})</span></li>
+              <li><span>PID</span><span>{proc?.pid ?? '-'}</span></li>
+              <li><span>Node</span><span>{proc?.nodeVersion ?? '-'}</span></li>
+              <li><span>Plateforme</span><span>{proc?.platform ?? '-'} ({proc?.arch ?? '-'})</span></li>
               <li>
                 <span>Memoire (heap)</span>
                 <span>
@@ -226,7 +226,7 @@
                     {formatBytes(proc.memory.heapUsed)} / {formatBytes(proc.memory.heapTotal)}
                     ({formatNumber(percent(proc.memory.heapUsed, proc.memory.heapTotal), { maximumFractionDigits: 1 })} %)
                   {:else}
-                    —
+                    -
                   {/if}
                 </span>
               </li>

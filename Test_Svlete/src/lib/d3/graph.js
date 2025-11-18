@@ -1,7 +1,7 @@
 // src/lib/d3/graph.js
-// - Surface identique éditeur/configurateur (le SVG prend la taille visible du conteneur)
-// - Recoloration instantanée quand le thème (data-theme) change
-// - Dépendances k/n, bords "obligatoire", tooltip, etc.
+// - Surface identique Ã©diteur/configurateur (le SVG prend la taille visible du conteneur)
+// - Recoloration instantanÃ©e quand le thÃ¨me (data-theme) change
+// - DÃ©pendances k/n, bords "obligatoire", tooltip, etc.
 import * as d3 from 'd3';
 
 const _zoomState = new WeakMap();
@@ -15,63 +15,111 @@ function wrapLabel(textSel, label, baseX, baseY, innerW, {
   align = 'middle', padX = NODE_PAD_X, padY = NODE_PAD_Y, lineH = NODE_LINE_H
 } = {}) {
   const anchor = align === 'middle' ? 'middle' : (align === 'right' ? 'end' : 'start');
-  const xBase  = align === 'middle' ? (baseX + padX + innerW/2)
-              : align === 'right'  ? (baseX + padX + innerW)
-              : (baseX + padX);
+  const xBase = align === 'middle'
+    ? (baseX + padX + innerW / 2)
+    : align === 'right'
+      ? (baseX + padX + innerW)
+      : (baseX + padX);
   textSel.text('').attr('text-anchor', anchor);
-  let line = [], lineNo = 0;
-  const makeTspan = () => textSel.append('tspan')
-    .attr('x', xBase)
-    .attr('y', lineNo === 0 ? (baseY + padY + lineH * 0.85) : null)
-    .attr('dy', lineNo === 0 ? null : lineH);
+  let line = [];
+  let lineNo = 0;
+  const makeTspan = () =>
+    textSel
+      .append('tspan')
+      .attr('x', xBase)
+      .attr('y', lineNo === 0 ? baseY + padY + lineH * 0.85 : null)
+      .attr('dy', lineNo === 0 ? null : lineH);
   let tsp = makeTspan();
   const words = tokenize(label);
   for (const w of words) {
-    if (w === '\n') { tsp.text(line.join(' ')); line = []; lineNo++; tsp = makeTspan(); continue; }
+    if (w === '\n') {
+      tsp.text(line.join(' '));
+      line = [];
+      lineNo++;
+      tsp = makeTspan();
+      continue;
+    }
     line.push(w);
     tsp.text(line.join(' '));
     if (tsp.node().getComputedTextLength() > innerW) {
       if (line.length === 1) {
         const parts = chunkWord(w, innerW, tsp);
-        if (parts.length) { tsp.text(parts.shift()); for (const p of parts) { lineNo++; tsp = makeTspan().text(p); } line = []; continue; }
+        if (parts.length) {
+          tsp.text(parts.shift());
+          for (const p of parts) {
+            lineNo++;
+            tsp = makeTspan().text(p);
+          }
+          line = [];
+          continue;
+        }
       }
-      line.pop(); tsp.text(line.join(' '));
-      line = [w]; lineNo++; tsp = makeTspan().text(w);
+      line.pop();
+      tsp.text(line.join(' '));
+      line = [w];
+      lineNo++;
+      tsp = makeTspan().text(w);
       if (tsp.node().getComputedTextLength() > innerW) {
         const parts = chunkWord(w, innerW, tsp);
-        tsp.text(parts.shift() || ''); for (const p of parts) { lineNo++; tsp = makeTspan().text(p); } line = [];
+        tsp.text(parts.shift() || '');
+        for (const p of parts) {
+          lineNo++;
+          tsp = makeTspan().text(p);
+        }
+        line = [];
       }
     }
   }
   const h = Math.ceil(textSel.node().getBBox().height);
   return h + padY * 2;
 }
-function tokenize(s) {
+function tokenize(value) {
   const parts = [];
-  s.split(/\n/).forEach((line, i, arr) => {
-    line.split(/(\s+|-)/).forEach(tok => { if (tok) parts.push(tok.trim()==='' ? ' ' : tok); });
+  (value || '').split(/\n/).forEach((line, i, arr) => {
+    line.split(/(\s+|-)/).forEach((tok) => {
+      if (!tok) return;
+      parts.push(tok.trim() === '' ? ' ' : tok);
+    });
     if (i < arr.length - 1) parts.push('\n');
   });
-  return parts.reduce((acc,t)=>{ if(t==='\n'){acc.push(t);return acc;} const last=acc[acc.length-1]; if(last===' '&&t===' ')return acc; acc.push(t); return acc;},[]);
+  return parts.reduce((acc, tok) => {
+    if (tok === '\n') {
+      acc.push(tok);
+      return acc;
+    }
+    const last = acc[acc.length - 1];
+    if (last === ' ' && tok === ' ') return acc;
+    acc.push(tok);
+    return acc;
+  }, []);
 }
 function chunkWord(word, maxW, tsp) {
-  const out=[]; let i=0;
-  while (i<word.length) {
-    let lo=1, hi=word.length-i, best=1;
-    while (lo<=hi) {
-      const mid=(lo+hi)>>1;
-      const slice = word.slice(i,i+mid) + (i+mid<word.length ? '-' : '');
+  const out = [];
+  let i = 0;
+  while (i < word.length) {
+    let lo = 1;
+    let hi = word.length - i;
+    let best = 1;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      const slice = word.slice(i, i + mid) + (i + mid < word.length ? '-' : '');
       tsp.text(slice);
-      if (tsp.node().getComputedTextLength() <= maxW) { best=mid; lo=mid+1; } else { hi=mid-1; }
+      if (tsp.node().getComputedTextLength() <= maxW) {
+        best = mid;
+        lo = mid + 1;
+      } else {
+        hi = mid - 1;
+      }
     }
-    const piece = word.slice(i,i+best); i += best;
-    out.push(i<word.length ? piece + '-' : piece);
+    const piece = word.slice(i, i + best);
+    i += best;
+    out.push(i < word.length ? `${piece}-` : piece);
   }
   return out;
 }
 
-/* ------------ dépendances k/n ------------ */
-function normalizedGroups(spec) {
+/* ------------ Groupes k/n ------------ */
+function normalizedRequiresGroups(spec) {
   const out = [];
   const groups = Array.isArray(spec?.requires_groups) ? spec.requires_groups : [];
   for (const g of groups) {
@@ -87,6 +135,18 @@ function normalizedGroups(spec) {
   }
   return out;
 }
+function normalizedIncompatibleGroups(spec) {
+  const out = [];
+  const groups = Array.isArray(spec?.incompatible_groups) ? spec.incompatible_groups : [];
+  for (const g of groups) {
+    const of = Array.isArray(g?.of) ? Array.from(new Set(g.of)) : [];
+    const max = of.length;
+    const fallback = Math.min(2, max);
+    const min = Math.max(0, Math.min(Number.isFinite(+g?.min) ? +g.min : fallback, max));
+    out.push({ min, of });
+  }
+  return out;
+}
 function groupSatisfied(g, selected) {
   const of = g.of || [];
   const min = Math.max(0, Math.min(Number.isFinite(+g.min) ? +g.min : of.length, of.length));
@@ -96,21 +156,43 @@ function groupSatisfied(g, selected) {
   return count >= min;
 }
 function requiresSatisfied(spec, selected) {
-  const allGroups = normalizedGroups(spec);
-  return allGroups.every(g => groupSatisfied(g, selected));
+  const allGroups = normalizedRequiresGroups(spec);
+  return allGroups.every((g) => groupSatisfied(g, selected));
 }
 function groupsMissing(spec, selected) {
-  const allGroups = normalizedGroups(spec);
-  return allGroups.map(g => {
+  const allGroups = normalizedRequiresGroups(spec);
+  return allGroups.map((g) => {
     const of = g.of || [];
     const min = Math.max(0, Math.min(Number.isFinite(+g.min) ? +g.min : of.length, of.length));
-    let count = 0; const missing = [];
+    let count = 0;
+    const missing = [];
     for (const id of of) {
-      if (selected.has(id)) count++; else missing.push(id);
+      if (selected.has(id)) count++;
+      else missing.push(id);
     }
     return { min, of, count, missing, ok: count >= min };
   });
 }
+function incompatibleGroupStates(spec, selected) {
+  const allGroups = normalizedIncompatibleGroups(spec);
+  return allGroups.map((g) => {
+    const of = g.of || [];
+    const min = Math.max(0, Math.min(Number.isFinite(+g.min) ? +g.min : of.length, of.length));
+    let count = 0;
+    const present = [];
+    const missing = [];
+    for (const id of of) {
+      if (selected.has(id)) {
+        count++;
+        present.push(id);
+      } else {
+        missing.push(id);
+      }
+    }
+    return { min, of, count, present, missing, active: min > 0 && count >= min };
+  });
+}
+
 
 /* ===================================================== */
 export function renderGraph(svgEl, ctx) {
@@ -127,7 +209,7 @@ export function renderGraph(svgEl, ctx) {
     rules = {},
     optionLabels = {},
     selected,
-    interactive = true,     // même traitement pour la surface
+    interactive = true,     // mÃªme traitement pour la surface
     onToggleGroup = () => {},
     onToggleSubgroup = () => {},
     onToggleSelect = () => {},
@@ -138,7 +220,7 @@ export function renderGraph(svgEl, ctx) {
   svg.on('dragover.dropzone', (e) => e.preventDefault());
   svg.on('drop.dropzone',     (e) => e.preventDefault());
 
-  // === clé : taille du SVG = taille VISIBLE (bbox du nœud + fallback parent)
+  // === clÃ© : taille du SVG = taille VISIBLE (bbox du noeud + fallback parent)
   const ensureSize = (el) => {
     let w = 0, h = 0;
     try {
@@ -259,10 +341,10 @@ export function renderGraph(svgEl, ctx) {
   svg.call(zoom).on('dblclick.zoom', null);
   svg.on('recenter', () => recenter());
 
-  /* ---------- légende ---------- */
+  /* ---------- lÃ©gende ---------- */
   const legend = svg.append('g').attr('transform','translate(16,16)');
   const legendItems = [
-    {key:'req', label:'Bloqué par dépendance',  boxFill:()=>pal.cReqBg,  boxStroke:()=>pal.cReqBorder, stripe:()=>pal.cReqBorder},
+    {key:'req', label:'BloquÃ© par dÃ©pendance',  boxFill:()=>pal.cReqBg,  boxStroke:()=>pal.cReqBorder, stripe:()=>pal.cReqBorder},
     {key:'inc', label:'Incompatible',           boxFill:()=>pal.cIncBg,  boxStroke:()=>pal.cIncBorder, stripe:()=>pal.cIncBorder},
     {key:'man', label:'Obligatoire',            boxFill:()=>'none',      boxStroke:()=>pal.cMandBorder, stripe:()=>pal.cMandBorder},
     {key:'opt', label:'Optionnelle (gamme)',    boxFill:()=>'url(#hatch)', boxStroke:()=>pal.cStroke,   stripe:()=>pal.cStroke}
@@ -456,19 +538,23 @@ export function renderGraph(svgEl, ctx) {
 
         // blocage via k/n
         const depsOk = requiresSatisfied(spec, selectedValue);
-        const missingGroups = groupsMissing(spec, selectedValue).filter(g => !g.ok);
+        const missingGroups = groupsMissing(spec, selectedValue).filter((g) => !g.ok);
         const blocked = !depsOk;
 
-        // incompatibilités
-        const incompatibleWithSel = Array.from(selectedValue).some(s =>
+        // incompatibilitÃ©s
+        const incompatibleStates = incompatibleGroupStates(spec, selectedValue);
+        const incompatGroupActive = incompatibleStates.some((state) => state.active);
+        const incompatibleWithSel = Array.from(selectedValue).some((s) =>
           (spec?.incompatible_with || []).includes(s) ||
           (rules[s]?.incompatible_with || []).includes(id)
         );
-        const incompatibleAny = ((spec?.incompatible_with || []).length > 0) ||
-                                Object.values(rules).some(r => (r?.incompatible_with || []).includes(id));
+        const incompatibleAny =
+          ((spec?.incompatible_with || []).length > 0) ||
+          Object.values(rules).some((r) => (r?.incompatible_with || []).includes(id)) ||
+          incompatibleStates.length > 0;
 
         const isSel = selectedValue?.has?.(id);
-        const canClick = interactive && !blocked && !incompatibleWithSel;
+        const canClick = interactive && !blocked && !incompatibleWithSel && !incompatGroupActive;
 
         let status = 'normal';
         if (blocked) status = 'blocked';
@@ -489,7 +575,7 @@ export function renderGraph(svgEl, ctx) {
         nodeMap.set(id, g);
         g.style('opacity', opacity).classed('search-hit', highlight);
 
-        const cursor = canClick ? 'pointer' : ((blocked || incompatibleWithSel) ? 'not-allowed' : 'default');
+        const cursor = canClick ? 'pointer' : ((blocked || incompatibleWithSel || incompatGroupActive) ? 'not-allowed' : 'default');
 
         const rect = g.append('rect')
           .attr('class','node-bg')
@@ -502,30 +588,48 @@ export function renderGraph(svgEl, ctx) {
           .on('click', () => { if (canClick) onToggleSelect(id); })
           .on('mousemove', (e)=>{
             const lines = [];
-            if (mans.length) lines.push(`Obligatoire: ${mans.map(r=>optionLabels[r]||r).join(', ')}`);
+            if (mans.length) lines.push(`Obligatoire : ${mans.map((r) => optionLabels[r] || r).join(', ')}`);
 
-            const ng = normalizedGroups(spec);
+            const ng = normalizedRequiresGroups(spec);
             if (ng.length) {
-              lines.push('Dépendances :');
-              ng.forEach((g, idx) => {
-                const ms = missingGroups.find(x => x.of.join('|') === g.of.join('|') && x.min === Math.max(0, Math.min(Number.isFinite(+g.min)?+g.min:g.of.length, g.of.length)));
-                const countSel = (g.of || []).filter(x => selectedValue.has(x)).length;
-                const lhs = (g.min === (g.of||[]).length) ? 'Tous' : (g.min === 1 ? '≥1' : `≥${g.min}`);
-                const base = `• ${lhs} parmi (${(g.of||[]).map(x=>optionLabels[x]||x).join(', ')}) — ${countSel}/${(g.of||[]).length}`;
-                if (ms && !ms.ok) lines.push(base + ` — manquants : ${(ms.missing||[]).map(x=>optionLabels[x]||x).join(', ')}`);
-                else lines.push(base + ' — ok');
+              lines.push('DÃ©pendances :');
+              ng.forEach((group) => {
+                const ms = missingGroups.find((x) => x.of.join('|') === group.of.join('|') && x.min === Math.max(0, Math.min(Number.isFinite(+group.min) ? +group.min : group.of.length, group.of.length)));
+                const countSel = (group.of || []).filter((x) => selectedValue.has(x)).length;
+                const lhs = group.min >= (group.of || []).length ? 'Tous' : (group.min === 1 ? '>=1' : `>=${group.min}`);
+                const base = `- ${lhs} parmi (${(group.of || []).map((x) => optionLabels[x] || x).join(', ')}) - ${countSel}/${(group.of || []).length}`;
+                if (ms && !ms.ok) {
+                  lines.push(base + ` - manquants : ${(ms.missing || []).map((x) => optionLabels[x] || x).join(', ')}`);
+                } else {
+                  lines.push(base + ' - ok');
+                }
               });
             }
 
-            const incompatibleWith = Array.from(selectedValue).filter(s =>
+            const incompatibleWith = Array.from(selectedValue).filter((s) =>
               (spec?.incompatible_with || []).includes(s) ||
               (rules[s]?.incompatible_with || []).includes(id)
             );
-            if (incompatibleWith.length) lines.push(`Incompatible avec: ${incompatibleWith.map(x=>optionLabels[x]||x).join(', ')}`);
+            if (incompatibleWith.length) {
+              lines.push(`Incompatible avec : ${incompatibleWith.map((x) => optionLabels[x] || x).join(', ')}`);
+            }
+
+            if (incompatibleStates.length) {
+              lines.push('IncompatibilitÃ©s conditionnelles :');
+              incompatibleStates.forEach((state) => {
+                const lhs = state.min >= state.of.length ? 'Tous' : (state.min === 1 ? '>=1' : `>=${state.min}`);
+                const base = `- ${lhs} parmi (${state.of.map((x) => optionLabels[x] || x).join(', ')}) - ${state.count}/${state.of.length}`;
+                if (state.active) {
+                  lines.push(base + ` - blocage (sÃ©lection : ${state.present.map((x) => optionLabels[x] || x).join(', ')})`);
+                } else {
+                  lines.push(base);
+                }
+              });
+            }
 
             const sLine = (gName, map) => {
               const st = (map?.[id]) || { included:false, optional:false };
-              return `${gName}: ${st.included ? 'Présent' : (st.optional ? 'Optionnel' : 'Absent')}`;
+              return `${gName} : ${st.included ? 'PrÃ©sent' : (st.optional ? 'Optionnel' : 'Absent')}`;
             };
             lines.push(sLine('Smart', gammesMap.Smart));
             lines.push(sLine('Mod',   gammesMap.Mod));
@@ -582,7 +686,7 @@ export function renderGraph(svgEl, ctx) {
     gx += groupWidth + groupSpacing;
   }
 
-  /* ---------- arêtes obligatoires ---------- */
+  /* ---------- arÃªtes obligatoires ---------- */
   for (const [fromId, spec] of Object.entries(rules || {})) {
     const list = spec?.mandatory || [];
     const from = nodePos.get(fromId);
@@ -603,7 +707,7 @@ export function renderGraph(svgEl, ctx) {
     }
   }
 
-  /* ---------- recadrage sur le CONTENU (mêmes 2 vues) ---------- */
+  /* ---------- recadrage sur le CONTENU (mÃªmes 2 vues) ---------- */
   function recenter(){
     [vw, vh] = ensureSize(svgEl);
     // adapter le rect de capture au viewport actuel
@@ -624,7 +728,7 @@ export function renderGraph(svgEl, ctx) {
     st.transform = t; st.userZoomed = false; _zoomState.set(svgEl, st);
   }
 
-  /* ---------- repaint quand le thème change ---------- */
+  /* ---------- repaint quand le thÃ¨me change ---------- */
   function repaintTheme() {
     pal = readPalette();
 
@@ -632,7 +736,7 @@ export function renderGraph(svgEl, ctx) {
     hatchPath.attr('stroke', pal.cTextMuted);
     glowDrop.attr('flood-color', pal.cSelBorder);
 
-    // légende
+    // lÃ©gende
     legend.selectAll('.legend-label')
       .attr('fill', pal.cText)
       .attr('stroke', pal.halo)
@@ -653,7 +757,7 @@ export function renderGraph(svgEl, ctx) {
     svg.selectAll('.group-title.search-hit').attr('fill', accent);
     svg.selectAll('.subgroup-title.search-hit').attr('fill', accent);
 
-    // nœuds (fond/trait selon status)
+    // noeuds (fond/trait selon status)
     const fillFor = (st) => st==='blocked' ? pal.cReqBg
                         : st==='incompatible' ? pal.cIncBg
                         : st==='selected' ? pal.cSelBg
@@ -674,21 +778,21 @@ export function renderGraph(svgEl, ctx) {
       .attr('stroke', pal.halo)
       .attr('stroke-width', pal.haloW);
 
-    // barres gammes (cases non-incluses doivent prendre cBoxBg/cStroke du thème)
+    // barres gammes (cases non-incluses doivent prendre cBoxBg/cStroke du thÃ¨me)
     svg.selectAll('.gbar[data-included="0"]')
       .attr('fill', pal.cBoxBg)
       .attr('stroke', pal.cStroke);
 
-    // arêtes obligatoires
+    // arÃªtes obligatoires
     svg.selectAll('.mand-edge').attr('stroke', pal.cMandBorder);
   }
 
-  // Observer les mutations de thème (data-theme sur <html> ou <body>)
+  // Observer les mutations de thÃ¨me (data-theme sur <html> ou <body>)
   const themeObserver = new MutationObserver(() => repaintTheme());
   themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
   themeObserver.observe(document.body, { attributes: true, attributeFilter: ['data-theme'] });
 
-  // Repaint initial (au cas où le thème courant ≠ clair)
+  // Repaint initial (au cas oÃ¹ le thÃ¨me courant != clair)
   repaintTheme();
 
   /* ---------- rendu final / cleanup ---------- */
@@ -706,7 +810,7 @@ export function renderGraph(svgEl, ctx) {
       .attr('fill', pal.cTextMuted)
       .attr('font-size', 15)
       .attr('font-weight', 600)
-      .text('Aucune option � afficher. Ajoutez une option dans un groupe ou un sous-groupe.');
+      .text('Aucune option  afficher. Ajoutez une option dans un groupe ou un sous-groupe.');
   } else {
     if (preserveZoom && st.transform) { svg.call(zoom.transform, st.transform); }
     else { setTimeout(recenter, 0); }

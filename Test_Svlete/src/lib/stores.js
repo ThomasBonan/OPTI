@@ -289,7 +289,23 @@ export const systemHealthLastUpdated = writable(null);
 
 /* ------------ Helpers internes ----------- */
 function normalizeArr(a) {
-  return Array.isArray(a) ? a.filter(x => typeof x === 'string') : [];
+  return Array.isArray(a) ? a.filter((x) => typeof x === 'string') : [];
+}
+
+function normalizeGroupList(value) {
+  if (!Array.isArray(value)) return [];
+  const cleaned = [];
+  value.forEach((entry) => {
+    if (!entry) return;
+    const of = Array.isArray(entry.of)
+      ? Array.from(new Set(entry.of.filter((id) => typeof id === 'string' && id.length)))
+      : [];
+    if (of.length === 0) return;
+    let min = Number.isFinite(+entry.min) ? +entry.min : of.length;
+    min = Math.max(0, Math.min(min, of.length));
+    cleaned.push({ min, of });
+  });
+  return cleaned;
 }
 
 /* =========================================
@@ -307,11 +323,23 @@ function normalizeRuleSets(raw) {
 
     for (const [fromId, spec] of Object.entries(rules)) {
       // Nouveau format ?
-      if (spec && (Array.isArray(spec.requires) || Array.isArray(spec.incompatible_with) || Array.isArray(spec.mandatory) || Array.isArray(spec.obligatoire))) {
+      if (
+        spec &&
+        (
+          Array.isArray(spec.requires) ||
+          Array.isArray(spec.incompatible_with) ||
+          Array.isArray(spec.mandatory) ||
+          Array.isArray(spec.obligatoire) ||
+          Array.isArray(spec.requires_groups) ||
+          Array.isArray(spec.incompatible_groups)
+        )
+      ) {
         norm[fromId] = {
           requires: normalizeArr(spec.requires),
           incompatible_with: normalizeArr(spec.incompatible_with),
-          mandatory: normalizeArr(spec.mandatory || spec.obligatoire)
+          mandatory: normalizeArr(spec.mandatory || spec.obligatoire),
+          requires_groups: normalizeGroupList(spec.requires_groups),
+          incompatible_groups: normalizeGroupList(spec.incompatible_groups)
         };
         continue;
       }
@@ -325,7 +353,13 @@ function normalizeRuleSets(raw) {
           else if (t.startsWith('inc')) inc.push(targetId);
           else if (t.startsWith('man') || t.startsWith('obli')) man.push(targetId);
         }
-        norm[fromId] = { requires: req, incompatible_with: inc, mandatory: man };
+        norm[fromId] = {
+          requires: req,
+          incompatible_with: inc,
+          mandatory: man,
+          requires_groups: [],
+          incompatible_groups: []
+        };
       }
     }
 
@@ -352,7 +386,8 @@ let lastRulesSnapshot = {};
 function hydrateFromPayload(obj = {}, { captureBaseline = true, schemaId = null } = {}) {
   let chosenRuleset = 'default';
   runWithoutTracking(() => {
-    const g = obj?.gammes || { Smart: {}, Mod: {}, Evo: {} };
+    try {
+      const g = obj?.gammes || { Smart: {}, Mod: {}, Evo: {} };
 
     let hier = {};
     if (obj?.groupedSubgroups && Object.keys(obj.groupedSubgroups).length) {
@@ -429,17 +464,30 @@ function hydrateFromPayload(obj = {}, { captureBaseline = true, schemaId = null 
     applyGroupedHierarchy(hier);
     optionLabels.set(labels);
     gammes.set(g);
+    if (typeof window !== 'undefined') {
+      window.__lastHydrate = {
+        groups: Object.keys(hier || {}),
+        labelCount: Object.keys(labels || {}).length,
+        schemaId
+      };
+    }
 
     const normalized = normalizeRuleSets(obj?.ruleSets);
+    const groupWeight = (list) =>
+      Array.isArray(list)
+        ? list.reduce((sum, g) => sum + ((g?.of && g.of.length) || 0), 0)
+        : 0;
     const countRules = (rs) =>
-      Object.values(rs?.rules || {}).reduce(
-        (n, r) =>
+      Object.values(rs?.rules || {}).reduce((n, r) => {
+        return (
           n +
           (r?.requires?.length || 0) +
+          groupWeight(r?.requires_groups) +
           (r?.incompatible_with?.length || 0) +
-          (r?.mandatory?.length || 0),
-        0
-      );
+          groupWeight(r?.incompatible_groups) +
+          (r?.mandatory?.length || 0)
+        );
+      }, 0);
 
     const keys = Object.keys(normalized);
     const bestByCount = keys.reduce(
@@ -455,10 +503,17 @@ function hydrateFromPayload(obj = {}, { captureBaseline = true, schemaId = null 
     const chosen =
       wanted && normalized[wanted] ? wanted : bestByCount || keys[0] || 'default';
 
-    rulesets.set(normalized);
-    currentRulesetName.set(chosen);
-    selected.set(new Set());
-    chosenRuleset = chosen;
+      rulesets.set(normalized);
+      currentRulesetName.set(chosen);
+      selected.set(new Set());
+      chosenRuleset = chosen;
+    } catch (err) {
+      if (typeof window !== 'undefined') {
+        window.__lastHydrateError = err?.message || String(err);
+      }
+      console.error('hydrateFromPayload failed', err);
+      throw err;
+    }
   });
 
   lastRulesSnapshot = getCurrentRulesSnapshot();
@@ -800,7 +855,7 @@ export async function importJSON(file) {
 }
 
 /* =========================================
- * Export (payload) — inclut maintenant 'mandatory'
+ * Export (payload) - inclut maintenant 'mandatory'
  * ======================================= */
 export function buildPayload() {
   const G = get(gammes);
@@ -840,7 +895,19 @@ export function buildPayload() {
     for (const [from, spec] of Object.entries(rs)) {
       out[from] = {
         requires: Array.isArray(spec?.requires) ? spec.requires.slice() : [],
+        requires_groups: Array.isArray(spec?.requires_groups)
+          ? spec.requires_groups.map((g) => ({
+              min: Number.isFinite(+g?.min) ? +g.min : 0,
+              of: Array.isArray(g?.of) ? g.of.slice() : []
+            }))
+          : [],
         incompatible_with: Array.isArray(spec?.incompatible_with) ? spec.incompatible_with.slice() : [],
+        incompatible_groups: Array.isArray(spec?.incompatible_groups)
+          ? spec.incompatible_groups.map((g) => ({
+              min: Number.isFinite(+g?.min) ? +g.min : 0,
+              of: Array.isArray(g?.of) ? g.of.slice() : []
+            }))
+          : [],
         mandatory: Array.isArray(spec?.mandatory) ? spec.mandatory.slice() : []
       };
     }
@@ -1101,6 +1168,9 @@ export async function loadSchemaFromDatabase(id) {
   if (!id) throw new Error('Schema id manquant');
   const record = await apiFetch(`/api/schemas/${id}`);
   if (!record?.payload) throw new Error('Reponse inattendue depuis le serveur');
+  if (typeof window !== 'undefined') {
+    window.__lastRecord = record;
+  }
   hydrateFromPayload(record.payload, { schemaId: record.id });
   activeSchema.set({
     id: record.id,
@@ -1308,7 +1378,7 @@ export function toggleSelect(id) {
   const cur = new Set(get(selected));
 
   if (cur.has(id)) {
-    // Deselection simple (on ne “desauto-selectionne” pas les obligations)
+    // Deselection simple (on ne "desauto-selectionne" pas les obligations)
     cur.delete(id);
     selected.set(cur);
     return;

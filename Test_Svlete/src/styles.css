@@ -1,8 +1,8 @@
 /* =========================
-   Thèmes & variables globales
+   ThÃ¨mes & variables globales
    ========================= */
 
-/* Thème clair (par défaut) */
+/* ThÃ¨me clair (par dÃ©faut) */
 :root,
 [data-theme="light"] {
   --c-bg: #f8fafc;
@@ -15,11 +15,11 @@
 
   --c-box-bg: #ffffff;
 
-  /* Dépendance manquante → GRISÉ (au lieu de bleu) */
+  /* DÃ©pendance manquante -> GRISÃ (au lieu de bleu) */
   --c-rule-req-bg: #f1f5f9;    /* slate-100 */
   --c-rule-req-border: #94a3b8;/* slate-400 */
 
-  /* Incompatibilité (rouge) */
+  /* IncompatibilitÃ© (rouge) */
   --c-rule-inc-bg: #fee2e2;
   --c-rule-inc-border: #dc2626;
 
@@ -32,7 +32,7 @@
   --c-mod:   #da261b;
   --c-evo:   #304e9c;
 
-  /* Sélection */
+  /* SÃ©lection */
   --c-selected-border: #5a49c8;
   --c-selected-stripe: #6d5cf3;
   --c-selected-bg:     #f0ecff;
@@ -44,12 +44,12 @@
   --tooltip-text: #e5e7eb;
   --tooltip-border: #374151;
 
-  /* Lisibilité du texte sur fond clair */
+  /* LisibilitÃ© du texte sur fond clair */
   --c-text-halo: #ffffff;
   --c-text-halo-w: 2px;
 }
 
-/* Thème sombre */
+/* ThÃ¨me sombre */
 [data-theme="dark"] {
   --c-bg: #0b0f14;
   --c-text: #e8eef5;
@@ -61,7 +61,7 @@
 
   --c-box-bg: #0f172a;
 
-  /* Dépendance manquante → GRISÉ sombre */
+  /* DÃ©pendance manquante -> GRISÃ sombre */
   --c-rule-req-bg: #1f2937;     /* gray-800 */
   --c-rule-req-border: #475569; /* slate-600 */
 
@@ -188,9 +188,9 @@ svg, svg * {
 /* 1) Toujours laisser les enfants prendre la place en flex/grille */
 .layout, .mainpane { min-width: 0; min-height: 0; }
 
-/* 2) vue configurateur : conteneur 2 colonnes (graphe + résumé)
-      - utilise la classe .combo si elle existe déjà (vue configurateur)
-      - sinon, ces règles n'impactent pas l'éditeur
+/* 2) vue configurateur : conteneur 2 colonnes (graphe + rÃ©sumÃ©)
+      - utilise la classe .combo si elle existe dÃ©jÃ  (vue configurateur)
+      - sinon, ces rÃ¨gles n'impactent pas l'Ã©diteur
 */
 .combo {
   display: grid;
@@ -201,7 +201,7 @@ svg, svg * {
   min-height: 0;
 }
 
-/* 3) Cellule du graphe (première colonne) */
+/* 3) Cellule du graphe (premiÃ¨re colonne) */
 .combo .graph-wrap,
 .combo .graphpane,
 .combo .graph-pane {
@@ -212,7 +212,7 @@ svg, svg * {
   overflow: hidden;
 }
 
-/* 4) Neutralise toute largeur/hauteur inline posée sur le wrapper du graphe */
+/* 4) Neutralise toute largeur/hauteur inline posÃ©e sur le wrapper du graphe */
 .graph-wrap,
 .graphpane,
 .graph-pane {
@@ -224,14 +224,14 @@ svg, svg * {
   overflow: hidden;
 }
 
-/* 5) Panneau de résumé à droite (largeur fixe, ne pousse pas le graphe) */
+/* 5) Panneau de rÃ©sumÃ© Ã  droite (largeur fixe, ne pousse pas le graphe) */
 .summary-panel {
   width: 360px;
   flex: 0 0 360px;
   overflow: auto;
 }
 
-/* 6) Sécurité : dans tout contexte, le wrapper immédiat du SVG ne rogne pas */
+/* 6) SÃ©curitÃ© : dans tout contexte, le wrapper immÃ©diat du SVG ne rogne pas */
 .graph-wrap > *, .graphpane > *, .graph-pane > * {
   min-width: 0;
   min-height: 0;

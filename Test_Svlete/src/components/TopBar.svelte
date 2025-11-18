@@ -1,9 +1,9 @@
 <!--
   TopBar.svelte
   ------------------------------
-  Regroupe la navigation globale, la gestion de session et les actions liées
-  aux schémas. Ce composant orchestre les interactions majeures (import/export,
-  sauvegarde, duplication, filtrage) et se charge d’afficher l’état de l’appli
+  Regroupe la navigation globale, la gestion de session et les actions liÃ©es
+  aux schÃ©mas. Ce composant orchestre les interactions majeures (import/export,
+  sauvegarde, duplication, filtrage) et se charge d'afficher l'Ã©tat de l'appli
   via le menu burger et les toasts.
 -->
 <script>
@@ -185,9 +185,9 @@ import {
     }
     try {
       await importJSON(file);
-      toastSuccess('Import effectué.');
+      toastSuccess('Import effectuÃ©.');
     } catch (err) {
-      toastError(err?.message || 'Échec import.');
+      toastError(err?.message || 'Ãchec import.');
     }
   }
 
@@ -239,13 +239,13 @@ import {
         archived: $activeSchema?.archived
       });
       toastSuccess(
-        record?.status === 'created' ? 'Schéma enregistré.' : 'Schéma mis à jour.'
+        record?.status === 'created' ? 'SchÃ©ma enregistrÃ©.' : 'SchÃ©ma mis Ã  jour.'
       );
       schemaDirty = false;
       schemaName = record?.name || schemaName;
       await refreshList();
     } catch (err) {
-      toastError(err?.message || "Échec de l'enregistrement du schéma.");
+      toastError(err?.message || "Ãchec de l'enregistrement du schÃ©ma.");
     } finally {
       saving = false;
     }
@@ -256,7 +256,7 @@ import {
     try {
       await refreshSavedSchemas({ includeArchived: true });
     } catch (err) {
-      toastError(err?.message || 'Échec du chargement des schémas.');
+      toastError(err?.message || 'Ãchec du chargement des schÃ©mas.');
     } finally {
       listLoading = false;
     }
@@ -275,7 +275,7 @@ import {
         schemaDirty = false;
         schemaName = $activeSchema?.name || schemaName;
       } catch (err) {
-        toastError(err?.message || 'Échec du chargement du schéma.');
+        toastError(err?.message || 'Ãchec du chargement du schÃ©ma.');
       } finally {
         loadingSchema = false;
       }
@@ -306,12 +306,12 @@ import {
     if (!trimmed) return;
     try {
       const record = await duplicateCurrentSchema(trimmed);
-      toastSuccess('Schéma dupliqué.');
+      toastSuccess('SchÃ©ma dupliquÃ©.');
       schemaDirty = false;
       schemaName = record?.name || trimmed;
       await refreshList();
     } catch (err) {
-      toastError(err?.message || 'Échec de la duplication.');
+      toastError(err?.message || 'Ãchec de la duplication.');
     }
   }
 
@@ -325,7 +325,7 @@ import {
     }
     const ok = restoreDraft();
     if (ok) {
-      toastSuccess('Brouillon restauré.');
+      toastSuccess('Brouillon restaurÃ©.');
     } else {
       toastError('Impossible de restaurer le brouillon local.');
     }
@@ -342,13 +342,13 @@ import {
     deleting = true;
     try {
       await deleteSchemaFromDatabase($activeSchema.id);
-      toastSuccess('Schéma supprimé.');
+      toastSuccess('SchÃ©ma supprimÃ©.');
       schemaName = '';
       schemaDirty = false;
       selectedSchemaId = '';
       await refreshList();
     } catch (err) {
-      toastError(err?.message || 'Échec de la suppression.');
+      toastError(err?.message || 'Ãchec de la suppression.');
     } finally {
       deleting = false;
     }
@@ -361,7 +361,7 @@ import {
     archivingActive = true;
     try {
       await archiveSchemaInDatabase(targetId, nextState);
-      toastSuccess(nextState ? 'SchǸma archivǸ.' : 'SchǸma restaure.');
+      toastSuccess(nextState ? 'SchNma archivN.' : 'SchNma restaure.');
       if (nextState) {
         selectedSchemaId = '';
       }
@@ -380,7 +380,7 @@ import {
     restoringId = schema.id;
     try {
       await archiveSchemaInDatabase(schema.id, false);
-      toastSuccess(`SchǸma "${schema.name}" restaure.`);
+      toastSuccess(`SchNma "${schema.name}" restaure.`);
       await refreshList();
     } catch (err) {
       toastError(err?.message || 'Restauration impossible.');
@@ -446,7 +446,7 @@ import {
     loggingIn = true;
     try {
       const user = await loginUser(loginUsername, loginPassword);
-      toastSuccess(`Connecté en tant que ${user.username}.`);
+      toastSuccess(`ConnectÃ© en tant que ${user.username}.`);
       showLogin = false;
       loginUsername = '';
       loginPassword = '';
@@ -461,10 +461,10 @@ import {
   async function handleLogout() {
     try {
       await logoutUser();
-      toastInfo('Déconnecté.');
+      toastInfo('DÃ©connectÃ©.');
       await refreshList();
     } catch (err) {
-      toastError(err?.message || 'Erreur lors de la déconnexion.');
+      toastError(err?.message || 'Erreur lors de la dÃ©connexion.');
     } finally {
       showLogin = false;
       resetCreateUserForm();

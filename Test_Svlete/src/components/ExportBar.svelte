@@ -5,7 +5,7 @@
   import { exportSVG, exportPNG, exportPDF } from '../lib/export-graph.js';
 
   let svg;                       // <svg> rendu du graphe
-  let pngScale = 2;              // échelle PNG
+  let pngScale = 2;              // Ã©chelle PNG
   let bg = 'transparent';        // 'transparent' | 'white'
 
   let unsub;
@@ -27,14 +27,14 @@
   const doExportPDF = () =>
     exportPDF(svg, { background: bg === 'white' ? '#ffffff' : null });
 
-  // ---------- NOUVEAU : Export de la liste des sélections (TXT) ----------
+  // ---------- NOUVEAU : Export de la liste des sÃ©lections (TXT) ----------
   function exportSelectionListTXT(filename = `selection-${new Date().toISOString().slice(0,10)}.txt`) {
     const G = get(grouped);              // { group: { root:[], subgroups:{sg:[]} } }
     const L = get(optionLabels);         // { id: label }
     const S = get(selected);             // Set<string> (ou tableau)
     const sel = S instanceof Set ? S : new Set(S || []);
 
-    // Construit un texte lisible par Groupe → Sous-groupe
+    // Construit un texte lisible par Groupe -> Sous-groupe
     const lines = [];
     for (const [gname, obj] of Object.entries(G || {})) {
       const root = Array.isArray(obj?.root) ? obj.root : [];
@@ -50,12 +50,12 @@
         const list = (ids || []).filter(id => sel.has(id)).map(id => L[id] || id);
         if (list.length) {
           bucket.push(`- ${sg}`);
-          list.forEach(l => bucket.push(`  • ${l}`));
+          list.forEach(l => bucket.push(`  - ${l}`));
         }
       }
 
       if (bucket.length) {
-        lines.push(`## ${gname}`, ...bucket, ''); // ligne vide séparatrice
+        lines.push(`## ${gname}`, ...bucket, ''); // ligne vide sÃ©paratrice
       }
     }
 
@@ -79,18 +79,18 @@
   <span class="sep"></span>
 
   <span class="label">Fond :</span>
-  <button class="chip {bg==='white' ? 'active' : ''}" on:click={() => (bg='white')} title="Fond blanc">▢</button>
-  <button class="chip {bg==='transparent' ? 'active' : ''}" on:click={() => (bg='transparent')} title="Fond transparent">ø</button>
+  <button class="chip {bg==='white' ? 'active' : ''}" on:click={() => (bg='white')} title="Fond blanc">[]</button>
+  <button class="chip {bg==='transparent' ? 'active' : ''}" on:click={() => (bg='transparent')} title="Fond transparent">Ã¸</button>
 
   <span class="sep"></span>
 
-  <label class="label" for="pngScale">Échelle PNG :</label>
+  <label class="label" for="pngScale">Ãchelle PNG :</label>
   <input id="pngScale" class="input" type="number" min="1" max="6" step="1" bind:value={pngScale} />
 
   <span class="sep"></span>
 
   <!-- NOUVEAU -->
-  <button class="btn accent" on:click={() => exportSelectionListTXT()} title="Exporter la liste des options sélectionnées (TXT)">
+  <button class="btn accent" on:click={() => exportSelectionListTXT()} title="Exporter la liste des options sÃ©lectionnÃ©es (TXT)">
     Liste
   </button>
 </div>
@@ -121,7 +121,7 @@
   }
   .btn:hover { filter: brightness(1.05); }
 
-  /* bouton “Liste” accentué, couleur tirée des vars de sélection que nous avons ajoutées */
+  /* bouton "Liste" accentuÃ©, couleur tirÃ©e des vars de sÃ©lection que nous avons ajoutÃ©es */
   .btn.accent {
     border-color: var(--c-selected-border, #16a34a);
     color: var(--c-selected-border, #16a34a);

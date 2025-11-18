@@ -1,9 +1,9 @@
-<!--
+?<!--
   GraphPane.svelte
   ------------------------------
-  Se charge du rendu D3 du graphe des options et g�re les r�sum�s des r�gles
-  pour les deux modes. Il observe les stores et d�clenche un nouveau rendu
-  d�s que les donn�es changent.
+  Se charge du rendu D3 du graphe des options et gÃ¨re les rÃ©sumÃ©s des rÃ¨gles
+  pour les deux modes. Il observe les stores et dÃ©clenche un nouveau rendu
+  dÃ¨s que les donnÃ©es changent.
 -->
 <script>
   import { onMount } from 'svelte';
@@ -17,7 +17,7 @@
   let svgEl;
   let cleanup = () => {};
 
-  // Rendu à la demande — on lit les règles “au moment du rendu�
+  // Rendu ÃÂ  la demande Ã¢EUR" on lit les rÃÂ¨gles Ã¢EURoeau moment du renduÃ¢EUR
   function rerender(preserveZoom = true) {
     cleanup();
 
@@ -70,19 +70,27 @@
     return () => { stop.forEach(fn => fn && fn()); cleanup(); };
   });
 
-  // ========= Résumé des règles (affiché sous le graphe en mode éditeur) =========
+  // ========= RÃÂ©sumÃÂ© des rÃÂ¨gles (affichÃÂ© sous le graphe en mode ÃÂ©diteur) =========
   $: activeRules = ($rulesets?.[$currentRulesetName]?.rules) || {};
   $: flatSummary = (() => {
     const out = [];
     for (const [from, spec] of Object.entries(activeRules)) {
+      const mandatory = (spec?.mandatory || []).slice().sort();
+      const incompatible = (spec?.incompatible_with || []).slice().sort();
+      const deps = dependenciesForDisplay(spec, $optionLabels);
+      const incompatGroups = incompatibleGroupsForDisplay(spec, $optionLabels);
+      if (!mandatory.length && !incompatible.length && deps.length === 0 && incompatGroups.length === 0) continue;
       out.push({
         from,
-        mandatory: (spec?.mandatory || []).slice().sort(),
-        requires: (spec?.requires || []).slice().sort(),
-        incompatible_with: (spec?.incompatible_with || []).slice().sort()
+        mandatory,
+        incompatible_with: incompatible,
+        incompatibleGroups: incompatGroups,
+        incompatibleGroupCount: incompatGroups.length,
+        dependencies: deps,
+        dependencyCount: deps.length
       });
     }
-    out.sort((a,b) => {
+    out.sort((a, b) => {
       const la = $optionLabels[a.from] || a.from;
       const lb = $optionLabels[b.from] || b.from;
       return la.localeCompare(lb, 'fr');
@@ -92,7 +100,71 @@
 
   function L(id) { return $optionLabels?.[id] || id; }
 
-  // Suppression ciblée d'un lien de règle
+  function normalizedDependencyGroups(spec = {}) {
+    const groups = Array.isArray(spec?.requires_groups) ? spec.requires_groups : [];
+    const normalized = [];
+    for (const g of groups) {
+      const of = Array.isArray(g?.of) ? Array.from(new Set(g.of)) : [];
+      if (of.length === 0) continue;
+      const max = of.length;
+      let min = Number.isFinite(+g?.min) ? Math.max(0, +g.min) : max;
+      min = Math.min(min, max);
+      normalized.push({ min, of });
+    }
+    return normalized;
+  }
+
+  function normalizedIncompatibleGroups(spec = {}) {
+    const groups = Array.isArray(spec?.incompatible_groups) ? spec.incompatible_groups : [];
+    const normalized = [];
+    for (const g of groups) {
+      const of = Array.isArray(g?.of) ? Array.from(new Set(g.of)) : [];
+      if (of.length === 0) continue;
+      const max = of.length;
+      let min = Number.isFinite(+g?.min) ? Math.max(0, +g.min) : Math.min(2, max);
+      min = Math.min(min, max);
+      normalized.push({ min, of });
+    }
+    return normalized;
+  }
+
+  function describeGroupLabel(group, labels = {}) {
+    const size = (group.of || []).length;
+    const min = Number.isFinite(group.min) ? Math.max(0, Math.min(group.min, size)) : size;
+    let head;
+    if (min >= size) head = 'Tous';
+    else if (min <= 0) head = '>=0';
+    else head = `>=${min}`;
+    const items = (group.of || []).map((id) => labels[id] || id);
+    return `${head} parmi (${items.join(', ')})`;
+  }
+
+  function dependenciesForDisplay(spec = {}, labels = {}) {
+    const entries = [];
+    const direct = Array.isArray(spec?.requires) ? spec.requires : [];
+    direct.forEach((id) => {
+      if (!id) return;
+      entries.push({ type: 'direct', id, label: labels[id] || id });
+    });
+    normalizedDependencyGroups(spec).forEach((group, idx) => {
+      entries.push({
+        type: 'group',
+        id: `dep-group-${idx}`,
+        label: describeGroupLabel(group, labels)
+      });
+    });
+    return entries;
+  }
+
+  function incompatibleGroupsForDisplay(spec = {}, labels = {}) {
+    const groups = normalizedIncompatibleGroups(spec);
+    return groups.map((group, idx) => ({
+      id: `inc-group-${idx}`,
+      label: describeGroupLabel(group, labels)
+    }));
+  }
+
+  // Suppression ciblÃÂ©e d'un lien de rÃÂ¨gle
   function removeEdge(from, edge, toId) {
     const name = $currentRulesetName;
     const next = structuredClone($rulesets || {});
@@ -105,22 +177,22 @@
 </script>
 
 <div class="graph-wrap">
-  <svg bind:this={svgEl} role="img" aria-label="Graphe des options et règles"></svg>
+  <svg bind:this={svgEl} role="img" aria-label="Graphe des options et rÃÂ¨gles"></svg>
 
   {#if $mode === 'editor'}
     <section class="rules-summary panel" aria-live="polite">
       <header>
-        <strong>Résumé des règles</strong>
+        <strong>RÃÂ©sumÃÂ© des rÃÂ¨gles</strong>
         <span class="counts">
-          {flatSummary.length} options •
-          {flatSummary.reduce((n,r)=>n+(r.mandatory?.length||0),0)} obligatoires •
-          {flatSummary.reduce((n,r)=>n+(r.requires?.length||0),0)} requires •
-          {flatSummary.reduce((n,r)=>n+(r.incompatible_with?.length||0),0)} incompatibilités
+          {flatSummary.length} options -
+          {flatSummary.reduce((n,r)=>n+(r.mandatory?.length||0),0)} obligatoires -
+          {flatSummary.reduce((n,r)=>n+(r.dependencyCount||0),0)} dÃ©pendances -
+          {flatSummary.reduce((n,r)=>n+(r.incompatible_with?.length||0)+(r.incompatibleGroupCount||0),0)} incompatibilitÃ©s
         </span>
       </header>
 
       {#if flatSummary.length === 0}
-        <div class="empty">Aucune règle définie pour l’instant.</div>
+        <div class="empty">Aucune rÃÂ¨gle dÃÂ©finie pour lÃ¢EURTMinstant.</div>
       {:else}
         <div class="summary-grid">
           {#each flatSummary as r}
@@ -130,57 +202,68 @@
               <div class="col">
                 <div class="badge mand">Obligatoire</div>
                 {#if r.mandatory.length === 0}
-                  <span class="muted">—</span>
+                  <span class="muted">-</span>
                 {:else}
                   {#each r.mandatory as id, i}
-                    <span class="chip mand" title="obligatoire">
+                    <span class="chip mand" title="Obligatoire">
                       {L(id)}
                       <button
                         class="chip-x"
-                        aria-label={"Supprimer l’obligation vers " + L(id)}
+                        aria-label={"Supprimer l'obligation vers " + L(id)}
                         title="Supprimer"
                         on:click={() => removeEdge(r.from, 'mandatory', id)}
-                      >×</button>
+                      >Ã</button>
                     </span>{#if i < r.mandatory.length-1}<span class="sep">, </span>{/if}
                   {/each}
                 {/if}
               </div>
 
               <div class="col">
-                <div class="badge req">Requires</div>
-                {#if r.requires.length === 0}
-                  <span class="muted">—</span>
+                <div class="badge req">DÃ©pendances</div>
+                {#if !(r.dependencies && r.dependencies.length)}
+                  <span class="muted">-</span>
                 {:else}
-                  {#each r.requires as id, i}
-                    <span class="chip req" title="requires">
-                      {L(id)}
-                      <button
-                        class="chip-x"
-                        aria-label={"Supprimer la dépendance vers " + L(id)}
-                        title="Supprimer"
-                        on:click={() => removeEdge(r.from, 'requires', id)}
-                      >×</button>
-                    </span>{#if i < r.requires.length-1}<span class="sep">, </span>{/if}
+                  {#each r.dependencies as dep, i}
+                    {#if dep.type === 'group'}
+                      <span class="chip req group" title="Groupe de dÃ©pendances">{dep.label}</span>
+                    {:else}
+                      <span class="chip req" title="DÃ©pendance">
+                        {dep.label}
+                        <button
+                          class="chip-x"
+                          aria-label={"Supprimer la dÃ©pendance vers " + dep.label}
+                          title="Supprimer"
+                          on:click={() => removeEdge(r.from, 'requires', dep.id)}
+                        >Ã</button>
+                      </span>
+                    {/if}
+                    {#if i < r.dependencies.length-1}<span class="sep">, </span>{/if}
                   {/each}
                 {/if}
               </div>
 
+
               <div class="col">
                 <div class="badge inc">Incompatible</div>
-                {#if r.incompatible_with.length === 0}
-                  <span class="muted">—</span>
+                {#if r.incompatible_with.length === 0 && !(r.incompatibleGroups && r.incompatibleGroups.length)}
+                  <span class="muted">-</span>
                 {:else}
                   {#each r.incompatible_with as id, i}
-                    <span class="chip inc" title="incompatible">
+                    <span class="chip inc" title="Incompatible">
                       {L(id)}
                       <button
                         class="chip-x"
-                        aria-label={"Supprimer l’incompatibilité avec " + L(id)}
+                        aria-label={"Supprimer l'incompatibilitÃ© avec " + L(id)}
                         title="Supprimer"
                         on:click={() => removeEdge(r.from, 'incompatible_with', id)}
-                      >×</button>
+                      >Ã</button>
                     </span>{#if i < r.incompatible_with.length-1}<span class="sep">, </span>{/if}
                   {/each}
+                  {#if r.incompatibleGroups && r.incompatibleGroups.length}
+                    {#each r.incompatibleGroups as group}
+                      <span class="chip inc group" title="Groupe d'incompatibilitÃ©s">{group.label}</span>
+                    {/each}
+                  {/if}
                 {/if}
               </div>
             </div>
@@ -226,8 +309,18 @@
   .chip.mand { border-color: var(--c-rule-mand-border); }
   .chip.req  { border-color: var(--c-rule-req-border); }
   .chip.inc  { border-color: var(--c-rule-inc-border); }
+  .chip.req.group {
+    border-style: dashed;
+    cursor: default;
+    background: color-mix(in srgb, var(--c-rule-req-border) 12%, transparent);
+  }
+  .chip.inc.group {
+    border-style: dashed;
+    cursor: default;
+    background: color-mix(in srgb, var(--c-rule-inc-border) 12%, transparent);
+  }
 
-  /* Croix équivalente à la "croix du résumé des nœuds" (style minimal, discret) */
+  /* Croix ÃÂ©quivalente ÃÂ  la "croix du rÃÂ©sumÃÂ© des nÃ"uds" (style minimal, discret) */
   .chip-x {
     appearance:none; border:none; background:transparent;
     color: var(--c-text-muted); cursor:pointer; font-size: 14px; line-height: 1;
