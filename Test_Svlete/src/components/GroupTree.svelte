@@ -437,7 +437,7 @@
         <button class="twisty" on:click={() => setCollapsed(g, '__group', !($collapsed[g]?.__group))}>
           {#if $collapsed[g]?.__group}>{:else}v{/if}
         </button>
-        <span class="icon folder">[folder]</span>
+        <span class="icon folder">📁</span>
 
         {#if editing.kind === 'group' && editing.group === g}
           <input bind:this={editInput} bind:value={editing.value} class="edit"
@@ -465,7 +465,7 @@
                  on:dragover={(e)=>onDragOverItem(e,g,'__root',i)}
                  on:drop={(e)=>onDropItem(e,g,'__root',i)}>
               <span class="handle" title="Glisser pour déplacer">......</span>
-              <span class="icon">[doc]</span>
+              <span class="icon">📄</span>
 
               {#if editing.kind === 'option' && editing.id === id}
                 <input bind:this={editInput} bind:value={editing.value} class="edit"
@@ -492,7 +492,7 @@
               <button class="twisty" on:click={() => setCollapsed(g, sg, !($collapsed[g]?.[sg]))}>
                 {#if $collapsed[g]?.[sg]}>{:else}v{/if}
               </button>
-              <span class="icon">[folder]</span>
+              <span class="icon">📁</span>
 
               {#if editing.kind === 'subgroup' && editing.group === g && editing.subgroup === sg}
                 <input bind:this={editInput} bind:value={editing.value} class="edit"
@@ -519,7 +519,7 @@
                        on:dragover={(e)=>onDragOverItem(e,g,sg,i)}
                        on:drop={(e)=>onDropItem(e,g,sg,i)}>
                     <span class="handle" title="Glisser pour déplacer">......</span>
-                    <span class="icon">[doc]</span>
+                    <span class="icon">📄</span>
 
                     {#if editing.kind === 'option' && editing.id === id}
                       <input bind:this={editInput} bind:value={editing.value} class="edit"
