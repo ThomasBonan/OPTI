@@ -219,7 +219,7 @@
               </div>
 
               <div class="col">
-                <div class="badge req">DÃ©pendances</div>
+                <div class="badge req">Dépendances</div>
                 {#if !(r.dependencies && r.dependencies.length)}
                   <span class="muted">-</span>
                 {:else}
